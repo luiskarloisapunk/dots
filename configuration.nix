@@ -104,7 +104,15 @@ settings = {
   programs.hyprland.enable = true;
   programs.firefox.enable = true;
   programs.mango.enable = true;
-  # List packages installed in system profile.
+  programs.neovim = {
+  enable = true;
+  defaultEditor = true;
+  viAlias = true;
+  vimAlias = true;
+  };
+
+
+# List packages installed in system profile.
   # You can use https://search.nixos.org/ to find more packages (and options).
  environment.systemPackages = with pkgs; [
    wget
