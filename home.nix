@@ -19,6 +19,7 @@ in
   imports = [
     ./modules/caelestia.nix
     ./modules/spicetify.nix
+    ./modules/systemfile.nix
   ];
 
 	home.username= "lk";
@@ -50,7 +51,6 @@ in
 
   programs.kitty = {
   enable = true;
-  # Feel free to change the font to your favorite Nerd Font
   font = {
     name = "JetBrainsMono Nerd Font";
     size = 11;

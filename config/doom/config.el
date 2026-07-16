@@ -32,19 +32,14 @@
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. This is the default:
-;;(setq doom-theme 'doom-mono-dark)
-;;(setq doom-theme 'doom-meltbus)
-(server-start)
-;; Carga directa del archivo de Caelestia
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type t)
+(setq doom-theme 'doom-meltbus)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
-(setq org-directory "~/org/")
-
-;; En ~/.config/doom/config.el
+(setq org-roam-directory "~/coco/")
 
 (add-to-list 'custom-theme-load-path "/home/lk/.local/state/caelestia/theme/")
 (setq doom-theme 'matugen)
@@ -84,7 +79,11 @@
 ;; Iniciar la vigilancia al arrancar la UI
 (add-hook 'window-setup-hook #'my/watch-caelestia-theme-changes)
 
-
+(map! :leader
+      :desc "Org-roam buffer" "c n l" #'org-roam-buffer-toggle
+      :desc "Find node"        "c n f" #'org-roam-node-find
+      :desc "Insert node"      "c n i" #'org-roam-node-insert
+      :desc "Activate Completion"      "C-M-i" #'completion-at-point)
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `with-eval-after-load' block, otherwise Doom's defaults may override your
 ;; settings. E.g.
