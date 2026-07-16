@@ -35,7 +35,7 @@ hl.monitor({
 ---------------------
 
 -- Set programs that you use
-local terminal    = "foot"
+local terminal    = "kitty"
 local fileManager = "yazi"
 
 hl.env("XCURSOR_THEME","Hackneyed-Dark")
@@ -191,6 +191,10 @@ hl.config({
     },
 })
 
+hl.window_rule({
+  match = { class = "Emacs" },
+  opacity = "0.85 0.85"
+})
 -- See https://wiki.hypr.land/Configuring/Layouts/Master-Layout/ for more
 hl.config({
     master = {

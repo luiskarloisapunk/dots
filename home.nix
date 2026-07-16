@@ -6,10 +6,9 @@ let
   configs = {
     mango= "mango";
     nvim= "nvim";
-    foot= "foot";
     quickshell= "quickshell";
     hypr = "hypr";
-    spicetify = "spicetify";
+    doom = "doom";
   };
 in
 
@@ -49,8 +48,28 @@ in
     recursive = true;
   }) configs;
 
+  programs.kitty = {
+  enable = true;
+  # Feel free to change the font to your favorite Nerd Font
+  font = {
+    name = "JetBrainsMono Nerd Font";
+    size = 11;
+  };
+  extraConfig = ''
+    include ~/.local/state/caelestia/theme/kitty.conf
 
-  home.pointerCursor = let
+    window_padding_width 15
+    hide_window_decorations yes
+    confirm_os_window_close 0
+    background_opacity 0.8
+  '';
+};
+
+home.file.".config/spicetify/Themes/Caelestia/color.ini".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.local/state/caelestia/theme/color.ini";
+
+
+
+home.pointerCursor = let
     hackneyedDark = pkgs.hackneyed.overrideAttrs (oldAttrs: {
       makeFlags = (oldAttrs.makeFlags or []) ++ [ "DARK_THEME=1" ];
     });
@@ -71,7 +90,6 @@ in
 		nixpkgs-fmt
 		nodejs
 		gcc
-    foot
     yazi
     (pkgs.writeShellApplication 
     {

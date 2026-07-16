@@ -117,7 +117,6 @@ settings = {
  environment.systemPackages = with pkgs; [
    wget
    neovim
-   btop
    git
 ];
 security.wrappers.gsr-kms-server = {
