@@ -97,12 +97,24 @@
 (setq org-roam-directory "~/coco/")
 (setq org-roam-dailies-directory "journal/")
 
+(after! org
+  (setq org-preview-latex-default-process 'dvisvgm)
+  (plist-put org-format-latex-options :scale 1.3)
+  (setq org-startup-with-latex-preview t))
+
+(after! org-appear
+  ;; Activa org-appear para fragmentos de LaTeX
+  (setq org-appear-autoorg-latex t)
+  ;; Hace que reaparezca el código al instante al poner el cursor encima
+  (setq org-appear-trigger 'manual)
+  (add-hook 'org-mode-hook 'org-appear-mode))
 
 ;;; -----------------------------------------------------------------------
 ;;; 4. ORG-ROAM: plantillas de captura (notas, diario)
 ;;; -----------------------------------------------------------------------
 
 (after! org-roam
+  
   (setq org-roam-capture-templates
         '(
           ("d" "default" plain "%?"
@@ -245,8 +257,11 @@
         )
   (map! :i "C-c n i" #'org-roam-node-insert-immediate)
 
-  (map! :map org-rode-map
-        "C-M-i" #'completion-at-point)
+  (map! :map org-mode-map
+        "C-M-i" #'completion-at-point
+        :localleader
+        :desc "Toggle LaTeX Preview" "x" #'org-latex-preview)
+
 
   (map! :prefix ("C-c n d" . "Dailies")
         "y" #'org-roam-dailies-capture-yesterday
