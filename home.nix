@@ -44,9 +44,6 @@ in
 	};
 
 
-environment.sessionVariables = {
-  TERMINAL = "kitty";
-};
   xdg.configFile = builtins.mapAttrs (name: subpath: {
     source = create_symlink "${dotfiles}/${subpath}";
     recursive = true;

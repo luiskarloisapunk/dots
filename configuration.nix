@@ -130,6 +130,11 @@ hardware.bluetooth = {
   enable = true;
   powerOnBoot = false;
 };
+
+
+environment.sessionVariables = {
+  TERMINAL = "kitty";
+};
 nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Some programs need SUID wrappers, can be configured further or are
