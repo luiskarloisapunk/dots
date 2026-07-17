@@ -44,18 +44,21 @@ in
 	};
 
 
+environment.sessionVariables = {
+  TERMINAL = "kitty";
+};
   xdg.configFile = builtins.mapAttrs (name: subpath: {
     source = create_symlink "${dotfiles}/${subpath}";
     recursive = true;
   }) configs;
 
   programs.kitty = {
-  enable = true;
-  font = {
-    name = "JetBrainsMono Nerd Font";
-    size = 11;
-  };
-  extraConfig = ''
+    enable = true;
+    font = {
+      name = "JetBrainsMono Nerd Font";
+      size = 11;
+    };
+    extraConfig = ''
     include ~/.local/state/caelestia/theme/kitty.conf
 
     window_padding_width 15
@@ -63,13 +66,13 @@ in
     confirm_os_window_close 0
     background_opacity 0.8
   '';
-};
+  };
 
-home.file.".config/spicetify/Themes/Caelestia/color.ini".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.local/state/caelestia/theme/color.ini";
+  home.file.".config/spicetify/Themes/Caelestia/color.ini".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.local/state/caelestia/theme/color.ini";
 
 
 
-home.pointerCursor = let
+  home.pointerCursor = let
     hackneyedDark = pkgs.hackneyed.overrideAttrs (oldAttrs: {
       makeFlags = (oldAttrs.makeFlags or []) ++ [ "DARK_THEME=1" ];
     });
@@ -92,24 +95,24 @@ home.pointerCursor = let
 		gcc
     yazi
     (pkgs.writeShellApplication 
-    {
-      name = "ns";
-      runtimeInputs = with pkgs; [
-      fzf
-      nix-search-tv
-      ];
-    text = builtins.readFile "${pkgs.nix-search-tv.src}/nixpkgs.sh";
-    })
+      {
+        name = "ns";
+        runtimeInputs = with pkgs; [
+          fzf
+          nix-search-tv
+        ];
+        text = builtins.readFile "${pkgs.nix-search-tv.src}/nixpkgs.sh";
+      })
     awww
     quickshell
     prismlauncher
     vesktop
     jetbrains-mono
     noto-fonts
-  (texlive.combine {
-    inherit (texlive) scheme-full dvipng dvisvgm;
-  })
+    (texlive.combine {
+      inherit (texlive) scheme-full dvipng dvisvgm;
+    })
     direnv
-];
+  ];
 
 }
