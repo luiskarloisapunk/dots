@@ -105,6 +105,7 @@ home.pointerCursor = let
     prismlauncher
     vesktop
     jetbrains-mono
+    noto-fonts   
 ];
 
 }
