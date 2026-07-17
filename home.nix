@@ -105,7 +105,10 @@ home.pointerCursor = let
     prismlauncher
     vesktop
     jetbrains-mono
-    noto-fonts   
+    noto-fonts
+  (texlive.combine {
+    inherit (texlive) scheme-full dvipng dvisvgm;
+  })
 ];
 
 }

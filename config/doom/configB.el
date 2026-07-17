@@ -222,9 +222,6 @@
   ;; Ejecutarlo al cargar
   (my/org-roam-refresh-agenda-list)
 
-  ;; =================================================================
-  ;; LA SOLUCIÓN MÁGICA: Cambiar nombres de archivo por categorías reales
-  ;; =================================================================
   (setq org-agenda-prefix-format
         '((agenda . " %i %-12:c%?-12t% s")
           (todo   . " %i %-12:c ")
@@ -245,7 +242,7 @@
         )
   (map! :i "C-c n i" #'org-roam-node-insert-immediate)
 
-  (map! :map org-rode-map
+  (map! :map org-roam-map
         "C-M-i" #'completion-at-point)
 
   (map! :prefix ("C-c n d" . "Dailies")
@@ -258,7 +255,6 @@
 ;;; 9. APARIENCIA DE ORG / MARKDOWN (estilo Obsidian para tomar notas)
 ;;; -----------------------------------------------------------------------
 
-;; Caras de encabezado de markdown-mode (para archivos .md)
 (custom-set-faces!
   '(markdown-header-face :inherit font-lock-function-name-face :weight bold :family "variable-pitch")
   '(markdown-header-face-1 :inherit markdown-header-face :height 1.6)
@@ -268,46 +264,28 @@
   '(markdown-header-face-5 :inherit markdown-header-face :height 1.2)
   '(markdown-header-face-6 :inherit markdown-header-face :height 1.1))
 
-;; IMPORTANTE: `doom-font' y `doom-variable-pitch-font' deben fijarse al nivel
-;; superior del archivo (NUNCA dentro de un `after!'). Doom lee estas
-;; variables una sola vez al arrancar, en `doom-init-fonts-h'; si las pones
-;; dentro de `(after! org ...)' se fijan demasiado tarde (org solo carga
-;; cuando abres el primer .org, ya después de que Doom inicializó las
-;; fuentes) y por eso seguía viéndose JetBrains Mono en todos lados.
-(setq doom-font (font-spec :family "JetBrains Mono" :size 15))
-;; Fuente serif para el texto de lectura/prosa de tus notas.
-;; Cambia "Noto Serif" por la serif que tengas instalada si prefieres otra
-;; (p. ej. "Georgia", "EB Garamond", "Liberation Serif").
-(setq doom-variable-pitch-font (font-spec :family "Noto Serif" :size 16))
-
 (after! org
   (add-hook 'org-mode-hook #'hl-todo-mode)
+  (setq doom-font (font-spec :family "Noto Serif" :size 22))
 
-  ;; OJO: antes esto estaba en `(custom-theme-set-faces! 'doom-one ...)', pero
-  ;; tu tema activo es `matugen', no `doom-one' — por eso nunca se aplicaba.
-  ;; `custom-set-faces!' (sin nombre de tema) se aplica encima de CUALQUIER
-  ;; tema activo.
-  ;;
-  ;; Usamos alturas ABSOLUTAS (en décimas de punto: 200 = 20pt) para todos los
-  ;; niveles, en vez de multiplicadores relativos (":height 1.6"). Los
-  ;; multiplicadores se calculan sobre la fuente que hereda cada cara — como
-  ;; `outline-N' hereda del `default' MONOESPACIADO (15pt), un heading
-  ;; profundo con multiplicador 1.0 terminaba más chico que el texto normal,
-  ;; que sí usa la serif de 20pt vía `mixed-pitch-mode'. Con números absolutos
-  ;; los headings siempre son >= que el cuerpo del texto (20pt), como debe ser.
-  (custom-set-faces!
-    '(org-document-title :height 230 :bold t :underline nil :family "Noto Serif")
-    '(org-level-1 :inherit outline-1 :height 170 :weight bold :family "Noto Serif")
-    '(org-level-2 :inherit outline-2 :height 160 :weight bold :family "Noto Serif")
-    '(org-level-3 :inherit outline-3 :height 150 :family "Noto Serif")
-    '(org-level-4 :inherit outline-3 :height 140 :family "Noto Serif")
-    '(org-level-5 :inherit outline-3 :height 130 :family "Noto Serif")
-    '(org-level-6 :inherit outline-3 :height 120 :family "Noto Serif")
-    '(org-level-7 :inherit outline-3 :height 120 :family "Noto Serif")
-    '(org-level-8 :inherit outline-3 :height 120 :family "Noto Serif")
-    '(org-list-dt :family "Noto Serif"))
+  ;; Escalar los títulos de Org Mode dentro del tema doom-one de forma correcta
+  (custom-theme-set-faces! 'doom-one
+    '(org-level-1 :inherit outline-1 :height 2.6 :weight bold)
+    '(org-level-2 :inherit outline-2 :height 1.5 :weight bold)
+    '(org-level-3 :inherit outline-3 :height 1.4)
+    '(org-level-4 :inherit outline-3 :height 1.3)
+    '(org-level-5 :inherit outline-3 :height 1.2)
+    '(org-level-6 :inherit outline-3 :height 1.1)
+    '(org-level-7 :inherit outline-3 :height 1.0)
+    '(org-level-8 :inherit outline-3 :height 1.0)
+    '(org-document-title :height 1.8 :bold t :underline nil)))
 
-  ;; --- Look "Obsidian / Markdown" para los .org --------------------------
+;; --- NUEVO: look "Obsidian / Markdown" para org-mode --------------------
+;; Oculta los asteriscos de los encabezados, los marcadores */_ de negrita
+;; y cursiva, y renderiza el buffer con proporciones tipo documento
+;; (variable-pitch), similar a como se ve en Obsidian / editores Markdown.
+
+(after! org
   (setq org-hide-emphasis-markers t)      ; oculta *negrita*, /cursiva/, etc.
   (setq org-pretty-entities t)            ; renderiza símbolos LaTeX/UTF-8
   (setq org-startup-indented t)           ; indentación tipo outline limpia
@@ -316,50 +294,8 @@
   (setq org-ellipsis " ▾")
 
   (add-hook 'org-mode-hook #'org-indent-mode)
-  (add-hook 'org-mode-hook #'visual-line-mode)
-
-  ;; Quitar los números de línea SOLO en los .org (el resto de buffers, como
-  ;; código, conservan `display-line-numbers-type' definido arriba)
-  (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1))))
-
-;; mixed-pitch-mode aplica la fuente serif (`doom-variable-pitch-font') solo
-;; al texto de prosa, y deja tablas, bloques de código, verbatim/código en
-;; línea y drawers con la fuente monoespaciada. Esto es lo que corrige el
-;; desalineado de las tablas: con una fuente proporcional en TODO el buffer
-;; una tabla nunca puede alinearse, porque cada carácter tiene un ancho
-;; distinto. Requiere añadir en $DOOMDIR/packages.el:
-;;   (package! mixed-pitch)
-(use-package! mixed-pitch
-  :hook (org-mode . mixed-pitch-mode)
-  :config
-  (setq mixed-pitch-set-height t) ; usa el tamaño de doom-variable-pitch-font
-  (dolist (face '(org-table
-                  org-table-row
-                  org-formula
-                  org-code
-                  org-verbatim
-                  org-block
-                  org-block-begin-line
-                  org-block-end-line
-                  org-meta-line
-                  org-document-info-keyword
-                  org-special-keyword
-                  org-drawer
-                  org-property-value
-                  org-tag
-                  line-number
-                  line-number-current-line))
-    (add-to-list 'mixed-pitch-fixed-pitch-faces face)))
-
-;; visual-fill-column centra el texto y limita su ancho, igual que la vista
-;; de lectura de Obsidian, en vez de estirarse de borde a borde de la
-;; ventana. Requiere añadir en $DOOMDIR/packages.el:
-;;   (package! visual-fill-column)
-(use-package! visual-fill-column
-  :hook (org-mode . visual-fill-column-mode)
-  :init
-  (setq visual-fill-column-width 100     ; ancho del "papel" en columnas
-        visual-fill-column-center-text t))
+  (add-hook 'org-mode-hook #'variable-pitch-mode)
+  (add-hook 'org-mode-hook #'visual-line-mode))
 
 ;; org-modern le da a org-mode una apariencia moderna (encabezados limpios,
 ;; viñetas redondeadas, tablas con bordes suaves, checkboxes bonitos), muy
@@ -368,11 +304,12 @@
 (use-package! org-modern
   :hook (org-mode . org-modern-mode)
   :config
-  (setq
-   org-modern-checkbox '((?X . "☑") (?- . "◐") (?\s . "☐"))
-   org-modern-table t
-   org-modern-block-fringe nil
-   org-modern-hide-stars t))
+  (setq org-modern-star '("◉" "○" "✸" "✿" "◈" "◇" "⁘")
+        org-modern-list '((?- . "•") (?+ . "◦") (?* . "‣"))
+        org-modern-checkbox '((?X . "☑") (?- . "◐") (?\s . "☐"))
+        ;;org-modern-table t
+        org-modern-block-fringe nil
+        org-modern-hide-stars t))
 
 
 ;;; -----------------------------------------------------------------------
