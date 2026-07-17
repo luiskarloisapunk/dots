@@ -109,7 +109,7 @@ home.pointerCursor = let
   (texlive.combine {
     inherit (texlive) scheme-full dvipng dvisvgm;
   })
-    python
+    direnv
 ];
 
 }
