@@ -104,6 +104,7 @@ home.pointerCursor = let
     quickshell
     prismlauncher
     vesktop
+    jetbrains-mono
 ];
 
 }

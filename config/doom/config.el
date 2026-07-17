@@ -35,11 +35,126 @@
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
 (setq display-line-numbers-type t)
-(setq doom-theme 'doom-meltbus)
 
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 (setq org-roam-directory "~/coco/")
+(setq org-roam-dailies-directory "journal/")
+
+
+(after! org
+  ;; 1. La función para copiar la tarea al diario de hoy
+  (defun my/org-roam-copy-todo-to-today ()
+    (interactive)
+    (let ((org-refile-keep t) ;; Cambia a nil si prefieres MOVER en vez de COPIAR
+          (org-roam-dailies-capture-templates
+           '(("t" "tasks" entry "%?"
+              :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Tasks")))))
+          (org-after-refile-insert-hook #'save-buffer)
+          today-file
+          pos)
+      (save-window-excursion
+        (org-roam-dailies--capture (current-time) t)
+        (setq today-file (buffer-file-name))
+        (setq pos (point)))
+
+      ;; Solo archiva si el archivo destino es diferente al actual
+      (unless (equal (file-truename today-file)
+                     (file-truename (buffer-file-name)))
+        (org-refile nil nil (list "Tasks" today-file nil pos)))))
+
+  ;; 2. Función segura para el hook (evita bloqueos si algo falla)
+  (defun my/org-roam-copy-todo-on-done-hook ()
+    "Ejecuta la copia al diario solo si el estado cambia a DONE."
+    (when (equal org-state "DONE")
+      (ignore-errors
+        (my/org-roam-copy-todo-to-today))))
+
+  ;; 3. Añadir el hook usando el método seguro de Emacs
+  (add-hook 'org-after-todo-state-change-hook #'my/org-roam-copy-todo-on-done-hook))
+(after! org-roam
+  (setq org-roam-capture-templates
+        '(
+
+
+          ("d" "default" plain "%?"
+           :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
+           :unnarrowed t)
+          ("l" "programming language" plain
+           "* Characteristics\n\n- Family: %?\n- Inspired by: \n\n* Reference:\n\n"
+           :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          ("b" "book notes" plain
+           (file "~/coco/templates/BookNoteTemplate.org")
+           :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+           :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+category: ${title}\n#+filetags: Project")
+           :unnarrowed t)
+          )
+        )
+  (setq org-roam-dailies-capture-templates
+        '(("d" "default" entry "* %<%I:%M %p>: %?"
+           :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+
+  )
+(custom-set-faces!
+  '(markdown-header-face :inherit font-lock-function-name-face :weight bold :family "variable-pitch")
+  '(markdown-header-face-1 :inherit markdown-header-face :height 1.6)
+  '(markdown-header-face-2 :inherit markdown-header-face :height 1.5)
+  '(markdown-header-face-3 :inherit markdown-header-face :height 1.4)
+  '(markdown-header-face-4 :inherit markdown-header-face :height 1.3)
+  '(markdown-header-face-5 :inherit markdown-header-face :height 1.2)
+  '(markdown-header-face-6 :inherit markdown-header-face :height 1.1))
+
+(after! org
+  (add-hook 'org-mode-hook #'hl-todo-mode)
+(setq doom-font (font-spec :family "JetBrains Mono" :size 15))
+
+(setq display-line-numbers-type t)    ;; Activar números de línea
+(setq confirm-kill-emacs nil)         ;; Salir sin pedir confirmación
+(setq initial-buffer-choice 'eshell)
+  ;; Escalar los títulos de Org Mode dentro del tema doom-one de forma correcta
+  (custom-theme-set-faces! 'doom-one
+    '(org-level-1 :inherit outline-1 :height 1.6 :weight bold)
+    '(org-level-2 :inherit outline-2 :height 1.5 :weight bold)
+    '(org-level-3 :inherit outline-3 :height 1.4)
+    '(org-level-4 :inherit outline-3 :height 1.3)
+    '(org-level-5 :inherit outline-3 :height 1.2)
+    '(org-level-6 :inherit outline-3 :height 1.1)
+    '(org-level-7 :inherit outline-3 :height 1.0)
+    '(org-level-8 :inherit outline-3 :height 1.0)
+    '(org-document-title :height 1.8 :bold t :underline nil)))
+(defun my/org-roam-capture-task ()
+  (interactive)
+  ;; Add the project file to the agenda after capture is finished
+  (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+
+  ;; Capture the new task, creating the project file if necessary
+  (org-roam-capture- :node (org-roam-node-read
+                            nil
+                            (my/org-roam-filter-by-tag "Project"))
+                     :templates '(("p" "project" plain "** TODO %?"
+                                   :if-new (file+head+olp "%<%Y%m%d%H%M%S>-${slug}.org"
+                                                          "#+title: ${title}\n#+category: ${title}\n#+filetags: Project"
+                                                          ("Tasks"))))))
+
+(global-set-key (kbd "C-c n t") #'my/org-roam-capture-task)
+
+(defun my/org-roam-capture-inbox ()
+  (interactive)
+  (org-roam-capture- :node (org-roam-node-create)
+                     :templates '(("i" "inbox" plain "* %?"
+                                  :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
+
+(global-set-key (kbd "C-c n b") #'my/org-roam-capture-inbox)
+
+(defun org-roam-node-insert-immediate (arg &rest args)
+  (interactive "P")
+  (let ((args (cons arg args))
+        (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                  '(:immediate-finish t)))))
+    (apply #'org-roam-node-insert args)))
 
 (add-to-list 'custom-theme-load-path "/home/lk/.local/state/caelestia/theme/")
 (setq doom-theme 'matugen)
@@ -76,14 +191,56 @@
                    ;; Damos 0.2 segundos para que Caelestia termine de escribir el archivo
                    (run-with-timer 0.2 nil #'my/reload-caelestia-theme)))))))))
 
-;; Iniciar la vigilancia al arrancar la UI
 (add-hook 'window-setup-hook #'my/watch-caelestia-theme-changes)
 
-(map! :leader
-      :desc "Org-roam buffer" "c n l" #'org-roam-buffer-toggle
-      :desc "Find node"        "c n f" #'org-roam-node-find
-      :desc "Insert node"      "c n i" #'org-roam-node-insert
-      :desc "Activate Completion"      "C-M-i" #'completion-at-point)
+(after! org-roam
+  (map! :leader
+        :desc "Org-roam buffer"     "c n l" #'org-roam-buffer-toggle
+        :desc "Find node"           "c n f" #'org-roam-node-find
+        :desc "Insert node"         "c n i" #'org-roam-node-insert
+        :desc "Insert node (discreet)" "C-c n I" #'org-roam-node-insert-immediate
+        )
+  (map! :i "C-c n i" #'org-roam-node-insert-immediate)
+
+  (map! :map org-rode-map
+        "C-M-i" #'completion-at-point)
+
+  (map! :prefix ("C-c n d" . "Dailies")
+        "y" #'org-roam-dailies-capture-yesterday
+        "t" #'org-roam-dailies-capture-tomorrow)
+
+  )
+
+
+(after! org-roam
+  ;; 1. El código de tu tutorial (Filtrar archivos por tag "Project")
+  (defun my/org-roam-filter-by-tag (tag-name)
+    (lambda (node)
+      (member tag-name (org-roam-node-tags node))))
+
+  (defun my/org-roam-list-notes-by-tag (tag-name)
+    (mapcar #'org-roam-node-file
+            (seq-filter
+             (my/org-roam-filter-by-tag tag-name)
+             (org-roam-node-list))))
+
+  (defun my/org-roam-refresh-agenda-list ()
+    (interactive)
+    (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
+
+  ;; Ejecutarlo al cargar
+  (my/org-roam-refresh-agenda-list)
+
+  ;; =================================================================
+  ;; LA SOLUCIÓN MÁGICA: Cambiar nombres de archivo por categorías reales
+  ;; =================================================================
+  (setq org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo   . " %i %-12:c ")
+          (tags   . " %i %-12:c ")
+          (search . " %i %-12:c "))))
+
+
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `with-eval-after-load' block, otherwise Doom's defaults may override your
 ;; settings. E.g.
