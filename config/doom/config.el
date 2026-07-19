@@ -117,19 +117,54 @@
 
   (defun my/org-roam-materia-get (key) (plist-get my/org-roam-materia--cache key))
 
+  (defun my/org-roam-materia-filetags ()
+    "Genera etiquetas: :Materia:S1:Reto:Juan_Perez:Ana_Lopez:
+Ya NO se agregan tags de submateria (antes CODIGO_SUBMATERIA); esa
+relación vive únicamente en la propiedad SUBMATERIAS del drawer."
+    (let* ((sem (my/org-roam-materia-get :semestre))
+           (profs (my/org-roam-materia-get :profesores))
+           (reto-tag (if (my/org-roam-materia-get :es-reto) "Reto:" ""))
+           (prof-tags (mapconcat (lambda (p) (format "%s:" (my/org-dir-sanitize p))) profs "")))
+      (format ":Materia:%s:%s%s" sem reto-tag prof-tags)))
+
+  (defun my/org-roam-materia-property-submaterias ()
+    "String crudo 'Amelia: Matematicas, Edgar: Fisica' para :SUBMATERIAS:.
+Vacío si la materia no tiene ninguna submateria."
+    (if (my/org-roam-materia-get :submaterias)
+        (or (my/org-roam-materia-get :prof-sub-raw) "")
+      ""))
+
+  (defun my/org-roam-materia-property-profesores ()
+    "Profesores separados por coma para :PROFESOR: (ej. 'Amelia, Edgar')."
+    (mapconcat #'identity (or (my/org-roam-materia-get :profesores) '()) ", "))
+
   ;; --- Flujo de Clase (Sesión) ---
   (defvar my/org-roam-clase--cache nil)
 
+  (defun my/org-roam-clase-get (key) (plist-get my/org-roam-clase--cache key))
+
   (defun my/org-roam-clase-filter (node) (member "Materia" (org-roam-node-tags node)))
 
-  (defun my/org-roam-clase-count (materia-title)
-    (let ((count 0) (re-materia (regexp-quote materia-title)))
+  (defun my/org-roam-clase-count (materia-title &optional submateria)
+    "Cuenta las Clases ya creadas para MATERIA-TITLE. Si SUBMATERIA no es
+nil, cuenta solo las de esa submateria, para que la Sesión se numere por
+separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
+1, 2... aunque sean de la misma Materia)."
+    (let ((count 0)
+          (re-materia (regexp-quote materia-title))
+          (re-submateria (and submateria (regexp-quote submateria))))
       (dolist (file (org-roam-list-files))
         (when (file-readable-p file)
           (with-temp-buffer
             (insert-file-contents file)
+            (goto-char (point-min))
             (when (and (re-search-forward "^#\\+filetags:.*:Clase:" nil t)
-                       (progn (goto-char (point-min)) (re-search-forward (format "^:MATERIA:.*%s" re-materia) nil t)))
+                       (progn (goto-char (point-min))
+                              (re-search-forward (format "^:MATERIA:.*%s" re-materia) nil t))
+                       (or (not re-submateria)
+                           (progn (goto-char (point-min))
+                                  (re-search-forward
+                                   (format "^:SUBMATERIA:[ \t]*%s[ \t]*$" re-submateria) nil t))))
               (setq count (1+ count))))))
       count))
 
@@ -157,11 +192,36 @@
                        submateria nil))))
       (let* ((semana (read-number "Semana (1-15): "))
              (periodo (format "P%d" (1+ (/ (1- semana) 5))))
-             (sesion (1+ (my/org-roam-clase-count materia-title))))
+             (sesion (1+ (my/org-roam-clase-count materia-title submateria))))
         (setq my/org-roam-clase--cache (list :codigo codigo :semestre semestre :semana semana :periodo periodo
                                              :sesion sesion :materia-title materia-title :materia-id materia-id
                                              :profesor prof-hoy :submateria submateria)))
       ""))
+
+  (defun my/org-roam-clase-filetags ()
+    (let ((prof-tag (if (my/org-roam-clase-get :profesor)
+                        (format "%s:" (my/org-dir-sanitize (my/org-roam-clase-get :profesor)))
+                      ""))
+          (sub-tag (if (my/org-roam-clase-get :submateria)
+                       (format "%s:" (my/org-dir-sanitize (my/org-roam-clase-get :submateria)))
+                     "")))
+      (format ":Clase:%s:%s:%s%sSemanas%d:%s:"
+              (my/org-roam-clase-get :codigo)
+              (my/org-roam-clase-get :semestre)
+              prof-tag
+              sub-tag
+              (my/org-roam-clase-get :semana)
+              (my/org-roam-clase-get :periodo))))
+
+  (defun my/org-roam-clase-materia-link ()
+    "Enlace [[id:...][Título]] a la Materia (no se rompe si la renombras)."
+    (format "[[id:%s][%s]]" (my/org-roam-clase-get :materia-id) (my/org-roam-clase-get :materia-title)))
+
+  (defun my/org-roam-clase-sesion () (number-to-string (my/org-roam-clase-get :sesion)))
+
+  (defun my/org-roam-clase-profesor () (or (my/org-roam-clase-get :profesor) ""))
+
+  (defun my/org-roam-clase-submateria () (or (my/org-roam-clase-get :submateria) ""))
 
   ;; --- Configuración de Captura ---
   (setq org-roam-capture-templates
@@ -179,11 +239,25 @@
     (when (and (boundp 'org-capture-plist) (string= (plist-get org-capture-plist :key) "uc") (not org-note-abort))
       (let* ((cap-buffer (org-capture-get :buffer)) (new-file (and cap-buffer (buffer-file-name cap-buffer)))
              (materia-title (my/org-roam-clase-get :materia-title)) (semana (my/org-roam-clase-get :semana))
-             (sesion (my/org-roam-clase-get :sesion)) real-title node-id link-str)
+             (sesion (my/org-roam-clase-get :sesion))
+             (submateria (my/org-roam-clase-get :submateria))
+             (sub-label (if submateria (format " [%s]" submateria) ""))
+             real-title node-id link-str)
         (when (and new-file (file-exists-p new-file))
-          (with-current-buffer (find-file-noselect new-file) (setq node-id (org-id-get-create)) (save-buffer))
+          (with-current-buffer (find-file-noselect new-file)
+            ;; Sacamos el título real del #+title: de la Clase (no el nombre
+            ;; genérico "Clase" de la plantilla de captura).
+            (save-excursion
+              (goto-char (point-min))
+              (when (re-search-forward "^#\\+title:[ \t]*\\(.*\\)$" nil t)
+                (setq real-title (string-trim (match-string 1)))))
+            (goto-char (point-min))
+            (setq node-id (org-id-get-create))
+            (save-buffer))
           (org-roam-db-update-file new-file))
-        (setq link-str (format "- Semana %s, Sesión %s: [[id:%s][%s]]\n" semana sesion node-id (plist-get org-capture-plist :description)))
+        (unless real-title
+          (setq real-title (plist-get org-capture-plist :description)))
+        (setq link-str (format "- Semana %s, Sesión %s%s: [[id:%s][%s]]\n" semana sesion sub-label node-id real-title))
         (let* ((materia-node (org-roam-node-from-title-or-alias materia-title)) (materia-file (when materia-node (org-roam-node-file materia-node))))
           (when materia-file (with-current-buffer (find-file-noselect materia-file)
                                (goto-char (point-max)) (insert link-str) (save-buffer)))))))
@@ -202,3 +276,168 @@
   (defun my/org-roam-filter-by-tag (tag-name) (lambda (node) (member tag-name (org-roam-node-tags node))))
   (defun my/org-roam-refresh-agenda-list () (setq org-agenda-files (mapcar #'org-roam-node-file (seq-filter (my/org-roam-filter-by-tag "Project") (org-roam-node-list)))))
   (my/org-roam-refresh-agenda-list))
+
+;;; -----------------------------------------------------------------------
+;;; 6. APARIENCIA DE ORG / MARKDOWN (estilo Obsidian para tomar notas)
+;;; -----------------------------------------------------------------------
+
+;; Caras de encabezado de markdown-mode (para archivos .md)
+(custom-set-faces!
+  '(markdown-header-face :inherit font-lock-function-name-face :weight bold :family "variable-pitch")
+  '(markdown-header-face-1 :inherit markdown-header-face :height 1.6)
+  '(markdown-header-face-2 :inherit markdown-header-face :height 1.5)
+  '(markdown-header-face-3 :inherit markdown-header-face :height 1.4)
+  '(markdown-header-face-4 :inherit markdown-header-face :height 1.3)
+  '(markdown-header-face-5 :inherit markdown-header-face :height 1.2)
+  '(markdown-header-face-6 :inherit markdown-header-face :height 1.1))
+
+;; IMPORTANTE: `doom-font' y `doom-variable-pitch-font' deben fijarse al nivel
+;; superior del archivo (NUNCA dentro de un `after!'). Doom lee estas
+;; variables una sola vez al arrancar, en `doom-init-fonts-h'; si las pones
+;; dentro de `(after! org ...)' se fijan demasiado tarde (org solo carga
+;; cuando abres el primer .org, ya después de que Doom inicializó las
+;; fuentes) y por eso seguía viéndose JetBrains Mono en todos lados.
+(setq doom-font (font-spec :family "JetBrains Mono" :size 15))
+;; Fuente serif para el texto de lectura/prosa de tus notas.
+;; Cambia "Noto Serif" por la serif que tengas instalada si prefieres otra
+;; (p. ej. "Georgia", "EB Garamond", "Liberation Serif").
+(setq doom-variable-pitch-font (font-spec :family "Noto Serif" :size 16))
+
+(after! org
+  (add-hook 'org-mode-hook #'hl-todo-mode)
+
+  ;; OJO: antes esto estaba en `(custom-theme-set-faces! 'doom-one ...)', pero
+  ;; tu tema activo es `matugen', no `doom-one' — por eso nunca se aplicaba.
+  ;; `custom-set-faces!' (sin nombre de tema) se aplica encima de CUALQUIER
+  ;; tema activo.
+  ;;
+  ;; Usamos alturas ABSOLUTAS (en décimas de punto: 200 = 20pt) para todos los
+  ;; niveles, en vez de multiplicadores relativos (":height 1.6"). Los
+  ;; multiplicadores se calculan sobre la fuente que hereda cada cara — como
+  ;; `outline-N' hereda del `default' MONOESPACIADO (15pt), un heading
+  ;; profundo con multiplicador 1.0 terminaba más chico que el texto normal,
+  ;; que sí usa la serif de 20pt vía `mixed-pitch-mode'. Con números absolutos
+  ;; los headings siempre son >= que el cuerpo del texto (20pt), como debe ser.
+  (custom-set-faces!
+    '(org-document-title :height 230 :bold t :underline nil :family "Noto Serif")
+    '(org-level-1 :inherit outline-1 :height 170 :weight bold :family "Noto Serif")
+    '(org-level-2 :inherit outline-2 :height 160 :weight bold :family "Noto Serif")
+    '(org-level-3 :inherit outline-3 :height 150 :family "Noto Serif")
+    '(org-level-4 :inherit outline-3 :height 140 :family "Noto Serif")
+    '(org-level-5 :inherit outline-3 :height 130 :family "Noto Serif")
+    '(org-level-6 :inherit outline-3 :height 120 :family "Noto Serif")
+    '(org-level-7 :inherit outline-3 :height 120 :family "Noto Serif")
+    '(org-level-8 :inherit outline-3 :height 120 :family "Noto Serif")
+    '(org-list-dt :family "Noto Serif"))
+
+  ;; --- Look "Obsidian / Markdown" para los .org --------------------------
+  (setq org-hide-emphasis-markers t)      ; oculta *negrita*, /cursiva/, etc.
+  (setq org-pretty-entities t)            ; renderiza símbolos LaTeX/UTF-8
+  (setq org-startup-indented t)           ; indentación tipo outline limpia
+  (setq org-startup-with-inline-images t) ; muestra imágenes al abrir el archivo
+  (setq org-image-actual-width '(400))
+  (setq org-ellipsis " ▾")
+
+  (add-hook 'org-mode-hook #'org-indent-mode)
+  (add-hook 'org-mode-hook #'visual-line-mode)
+
+  ;; Quitar los números de línea SOLO en los .org (el resto de buffers, como
+  ;; código, conservan `display-line-numbers-type' definido arriba)
+  (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1))))
+
+;; mixed-pitch-mode aplica la fuente serif (`doom-variable-pitch-font') solo
+;; al texto de prosa, y deja tablas, bloques de código, verbatim/código en
+;; línea y drawers con la fuente monoespaciada. Esto es lo que corrige el
+;; desalineado de las tablas: con una fuente proporcional en TODO el buffer
+;; una tabla nunca puede alinearse, porque cada carácter tiene un ancho
+;; distinto. Requiere añadir en $DOOMDIR/packages.el:
+;;   (package! mixed-pitch)
+(use-package! mixed-pitch
+  :hook (org-mode . mixed-pitch-mode)
+  :config
+  (setq mixed-pitch-set-height t) ; usa el tamaño de doom-variable-pitch-font
+  (dolist (face '(org-table
+                  org-table-row
+                  org-formula
+                  org-code
+                  org-verbatim
+                  org-block
+                  org-block-begin-line
+                  org-block-end-line
+                  org-meta-line
+                  org-document-info-keyword
+                  org-special-keyword
+                  org-drawer
+                  org-property-value
+                  org-tag
+                  line-number
+                  line-number-current-line))
+    (add-to-list 'mixed-pitch-fixed-pitch-faces face)))
+
+;; visual-fill-column centra el texto y limita su ancho, igual que la vista
+;; de lectura de Obsidian, en vez de estirarse de borde a borde de la
+;; ventana. Requiere añadir en $DOOMDIR/packages.el:
+;;   (package! visual-fill-column)
+(use-package! visual-fill-column
+  :hook (org-mode . visual-fill-column-mode)
+  :init
+  (setq visual-fill-column-width 100     ; ancho del "papel" en columnas
+        visual-fill-column-center-text t))
+
+;; org-modern le da a org-mode una apariencia moderna (encabezados limpios,
+;; viñetas redondeadas, tablas con bordes suaves, checkboxes bonitos), muy
+;; similar a Obsidian/Markdown. Si el paquete no está instalado, añade en
+;; $DOOMDIR/packages.el la línea: (package! org-modern)
+(use-package! org-modern
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq
+   org-modern-checkbox '((?X . "☑") (?- . "◐") (?\s . "☐"))
+   org-modern-table t
+   org-modern-block-fringe nil
+   org-modern-hide-stars t))
+
+
+;;; -----------------------------------------------------------------------
+;;; 7. KEYBINDINGS: org-roam
+;;; -----------------------------------------------------------------------
+
+(after! org-roam
+  (map! :leader
+        :desc "Org-roam buffer"     "c n l" #'org-roam-buffer-toggle
+        :desc "Find node"           "c n f" #'org-roam-node-find
+        :desc "Insert node"         "c n i" #'org-roam-node-insert
+        :desc "Insert node (discreet)" "C-c n I" #'org-roam-node-insert-immediate
+        (:prefix ("t" . "toggle")
+         :desc "Toggle eshell split"            "e" #'+eshell/toggle
+         :desc "Toggle line highlight in frame" "h" #'hl-line-mode
+         :desc "Toggle line highlight globally" "H" #'global-hl-line-mode
+         :desc "Toggle line numbers"            "l" #'doom/toggle-line-numbers
+         :desc "Toggle markdown-view-mode"      "m" #'dt/toggle-markdown-view-mode
+         :desc "Toggle truncate lines"          "t" #'toggle-truncate-lines
+         :desc "Toggle treemacs"                "T" #'+treemacs/toggle
+         :desc "Toggle ghostel split"             "g" #'+ghostel/toggle
+         )
+        )
+  (map! :i "C-c n i" #'org-roam-node-insert-immediate)
+
+  (map! :map org-mode-map
+        "C-M-i" #'completion-at-point
+        :localleader
+        :desc "Toggle LaTeX Preview" "x" #'org-latex-preview)
+
+
+  (map! :prefix ("C-c n d" . "Dailies")
+        :desc "Capture in yesterday journal" "Y" #'org-roam-dailies-capture-yesterday
+        :desc "Capture in tomorrow journal" "T" #'org-roam-dailies-capture-tomorrow
+        :desc "Capture in today journal" "n" #'org-roam-dailies-capture-today
+        :desc "Go to today journal" "d" #'org-roam-dailies-goto-today
+        :desc "Go to yesterday journal" "y" #'org-roam-dailies-goto-yesterday
+        :desc "Go to tomorrow journal" "t" #'org-roam-dailies-goto-tomorrow
+        :desc "Capture in any day journal" "v" #'org-roam-dailies-capture-date
+        :desc "Go to any day journal" "c" #'org-roam-dailies-goto-date
+        :desc "Go to next journal" "b" #'org-roam-dailies-goto-next-note
+        :desc "Go to previous journal" "f" #'org-roam-dailies-goto-previous-note
+        )
+
+  )

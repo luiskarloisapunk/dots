@@ -20,7 +20,7 @@ in
     ./modules/caelestia.nix
     ./modules/spicetify.nix
     ./modules/systemfile.nix
-    ./modules/yazi.nix
+#    ./modules/yazi.nix
   ];
 
 xdg.desktopEntries = {
@@ -86,9 +86,6 @@ xdg.desktopEntries = {
   '';
   };
 
-  home.file.".config/spicetify/Themes/Caelestia/color.ini".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.local/state/caelestia/theme/color.ini";
-
-
 
   home.pointerCursor = let
     hackneyedDark = pkgs.hackneyed.overrideAttrs (oldAttrs: {
@@ -131,7 +128,7 @@ xdg.desktopEntries = {
     })
     direnv
     trash-cli
-    libreoffice
+    yazi
   ];
 
 }
