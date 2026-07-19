@@ -20,7 +20,28 @@ in
     ./modules/caelestia.nix
     ./modules/spicetify.nix
     ./modules/systemfile.nix
+    ./modules/yazi.nix
   ];
+
+xdg.desktopEntries = {
+    yazi = {
+      name = "Yazi File Manager";
+      genericName = "File Manager";
+      exec = "kitty --class yazi -e yazi %u"; 
+      icon = "yazi";
+      terminal = false;
+      categories = [ "System" "FileTools" "FileManager" "ConsoleOnly" ];
+      mimeType = [ "inode/directory" ];
+    };
+  };
+
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "inode/directory" = [ "yazi.desktop" ];
+    };
+  };
+
 
 	home.username= "lk";
 	home.homeDirectory = "/home/lk";
@@ -90,7 +111,6 @@ in
 		nixpkgs-fmt
 		nodejs
 		gcc
-    yazi
     (pkgs.writeShellApplication 
       {
         name = "ns";
@@ -110,6 +130,8 @@ in
       inherit (texlive) scheme-full dvipng dvisvgm;
     })
     direnv
+    trash-cli
+    libreoffice
   ];
 
 }

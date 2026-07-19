@@ -132,9 +132,16 @@ hardware.bluetooth = {
 };
 
 
-environment.sessionVariables = {
-  TERMINAL = "kitty";
-};
+#environment.sessionVariables = {
+#  TERMINAL = "kitty";
+#};
+
+
+
+xdg.terminal-exec.enable = true;
+# Replace "kitty" with your preferred terminal's package name
+xdg.terminal-exec.settings.default = [ "kitty.desktop" ]; 
+
 nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Some programs need SUID wrappers, can be configured further or are
