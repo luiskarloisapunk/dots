@@ -9,31 +9,70 @@
 ;;; -----------------------------------------------------------------------
 ;;; 2. TEMA: Caelestia / Matugen
 ;;; -----------------------------------------------------------------------
+;;(add-to-list 'custom-theme-load-path "/home/lk/.local/state/caelestia/theme/")
+;;(setq doom-theme 'matugen)
+;;
+;;(defun my/reload-caelestia-theme ()
+;;  (interactive)
+;;  (load-theme 'matugen t)
+;;  (message "¡Tema dinámico de Matugen recargado!"))
+;;
+;;(require 'filenotify)
+;;(defvar my/caelestia-theme-watcher nil)
+;;
+;;(defun my/watch-caelestia-theme-changes ()
+;;  (let ((theme-dir "/home/lk/.local/state/caelestia/theme/"))
+;;    (when my/caelestia-theme-watcher
+;;      (ignore-errors (file-notify-rm-watch my/caelestia-theme-watcher)))
+;;    (when (file-directory-p theme-dir)
+;;      (setq my/caelestia-theme-watcher
+;;            (file-notify-add-watch theme-dir '(change)
+;;                                   (lambda (event)
+;;                                     (let ((action (nth 1 event)) (file (nth 2 event)))
+;;                                       (when (and (string= (file-name-nondirectory file) "matugen-theme.el")
+;;                                                  (memq action '(changed created renamed)))
+;;                                         (run-with-timer 0.2 nil #'my/reload-caelestia-theme)))))))))
+;;
+;;(add-hook 'window-setup-hook #'my/watch-caelestia-theme-changes)
+
 (add-to-list 'custom-theme-load-path "/home/lk/.local/state/caelestia/theme/")
 (setq doom-theme 'matugen)
-
-(defun my/reload-caelestia-theme ()
-  (interactive)
-  (load-theme 'matugen t)
-  (message "¡Tema dinámico de Matugen recargado!"))
-
 (require 'filenotify)
-(defvar my/caelestia-theme-watcher nil)
+(defvar my/matugen-watcher nil)
+(defvar my/matugen-timer nil)
 
-(defun my/watch-caelestia-theme-changes ()
-  (let ((theme-dir "/home/lk/.local/state/caelestia/theme/"))
-    (when my/caelestia-theme-watcher
-      (ignore-errors (file-notify-rm-watch my/caelestia-theme-watcher)))
-    (when (file-directory-p theme-dir)
-      (setq my/caelestia-theme-watcher
-            (file-notify-add-watch theme-dir '(change)
-                                   (lambda (event)
-                                     (let ((action (nth 1 event)) (file (nth 2 event)))
-                                       (when (and (string= (file-name-nondirectory file) "matugen-theme.el")
-                                                  (memq action '(changed created renamed)))
-                                         (run-with-timer 0.2 nil #'my/reload-caelestia-theme)))))))))
+(defun my/watch-matugen-theme ()
+  "Vigila la carpeta y recarga el tema sin importar cómo guarde Matugen."
+  (interactive)
+  ;; Limpiar watcher previo si existe
+  (when my/matugen-watcher
+    (ignore-errors (file-notify-rm-watch my/matugen-watcher)))
 
-(add-hook 'window-setup-hook #'my/watch-caelestia-theme-changes)
+  (let ((dir (file-truename "/home/lk/.local/state/caelestia/theme/")))
+    (if (not (file-directory-p dir))
+        (message "ERROR DE VIGILANCIA: No se encuentra la carpeta %s" dir)
+      (setq my/matugen-watcher
+            (file-notify-add-watch
+             dir '(change)
+             (lambda (event)
+               ;; Convertimos TODO el evento en texto para evitar fallos de índice
+               (let ((event-str (format "%S" event)))
+                 ;; Si el evento menciona "matugen" en cualquier parte:
+                 (when (string-match-p "matugen" event-str)
+                   ;; Cancelamos el temporizador anterior si hay ráfagas de escrituras
+                   (when (timerp my/matugen-timer)
+                     (cancel-timer my/matugen-timer))
+                   ;; Programamos la recarga 0.5 segundos después del último evento
+                   (setq my/matugen-timer
+                         (run-with-timer 0.0 nil (lambda ()
+                                                   (message "¡Recargando tema Matugen!")
+                                                   (doom/reload-theme)))))))))
+      (message "Vigilando cambios en: %s" dir))))
+
+;; Activar al terminar de iniciar Doom Emacs
+(add-hook 'doom-after-init-hook #'my/watch-matugen-theme)
+
+
 
 ;;; -----------------------------------------------------------------------
 ;;; 3. ORG / ORG-ROAM: directorios y configuración base
