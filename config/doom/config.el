@@ -119,8 +119,8 @@
 
   (defun my/org-roam-materia-filetags ()
     "Genera etiquetas: :Materia:S1:Reto:Juan_Perez:Ana_Lopez:
-Ya NO se agregan tags de submateria (antes CODIGO_SUBMATERIA); esa
-relación vive únicamente en la propiedad SUBMATERIAS del drawer."
+Ya NO se agregan tags de submateria; esa relación vive únicamente en la
+propiedad SUBMATERIAS del drawer."
     (let* ((sem (my/org-roam-materia-get :semestre))
            (profs (my/org-roam-materia-get :profesores))
            (reto-tag (if (my/org-roam-materia-get :es-reto) "Reto:" ""))
@@ -187,10 +187,10 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
                (setq prof-hoy (car elegido) submateria (cdr elegido))))
             (pairs (setq prof-hoy (caar pairs) submateria (cdar pairs)))
             (t (let ((prof-tags (seq-filter (lambda (tag) (not (member tag (list "Materia" "Reto" semestre)))) materia-tags)))
-                 (setq prof-hoy (cond ((> (length prof-tags) 1) (completing-read "¿Profesor?: " prof-tags nil t))
+                 (setq prof-hoy (cond ((> (length prof-tags) 1) (completing-read "¿Qué profesor impartió hoy?: " prof-tags nil t))
                                       ((= (length prof-tags) 1) (car prof-tags)) (t nil))
                        submateria nil))))
-      (let* ((semana (read-number "Semana (1-15): "))
+      (let* ((semana (read-number "Semana actual de clases (1-15): "))
              (periodo (format "P%d" (1+ (/ (1- semana) 5))))
              (sesion (1+ (my/org-roam-clase-count materia-title submateria))))
         (setq my/org-roam-clase--cache (list :codigo codigo :semestre semestre :semana semana :periodo periodo
@@ -205,7 +205,7 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
           (sub-tag (if (my/org-roam-clase-get :submateria)
                        (format "%s:" (my/org-dir-sanitize (my/org-roam-clase-get :submateria)))
                      "")))
-      (format ":Clase:%s:%s:%s%sSemanas%d:%s:"
+      (format ":Clase:%s:%s:%s%sSemana%d:%s:"
               (my/org-roam-clase-get :codigo)
               (my/org-roam-clase-get :semestre)
               prof-tag
@@ -232,53 +232,174 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
           ("e" "Escritura" plain "* %?\n\n#+begin_verse\n\n#+end_verse" :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :Escritura:\n") :unnarrowed t)
           ("b" "book notes" plain (file "~/coco/templates/bookTemplate.org") :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)))
 
-  (setq org-roam-dailies-capture-templates '(("d" "default" entry "* %<%I:%M %p>: \n%?" :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
-
-  ;; --- Auto-indexar Clases ---
-  (defun my/org-roam-link-clase-to-materia ()
-    (when (and (boundp 'org-capture-plist) (string= (plist-get org-capture-plist :key) "uc") (not org-note-abort))
-      (let* ((cap-buffer (org-capture-get :buffer)) (new-file (and cap-buffer (buffer-file-name cap-buffer)))
-             (materia-title (my/org-roam-clase-get :materia-title)) (semana (my/org-roam-clase-get :semana))
-             (sesion (my/org-roam-clase-get :sesion))
-             (submateria (my/org-roam-clase-get :submateria))
-             (sub-label (if submateria (format " [%s]" submateria) ""))
-             real-title node-id link-str)
-        (when (and new-file (file-exists-p new-file))
-          (with-current-buffer (find-file-noselect new-file)
-            ;; Sacamos el título real del #+title: de la Clase (no el nombre
-            ;; genérico "Clase" de la plantilla de captura).
-            (save-excursion
-              (goto-char (point-min))
-              (when (re-search-forward "^#\\+title:[ \t]*\\(.*\\)$" nil t)
-                (setq real-title (string-trim (match-string 1)))))
-            (goto-char (point-min))
-            (setq node-id (org-id-get-create))
-            (save-buffer))
-          (org-roam-db-update-file new-file))
-        (unless real-title
-          (setq real-title (plist-get org-capture-plist :description)))
-        (setq link-str (format "- Semana %s, Sesión %s%s: [[id:%s][%s]]\n" semana sesion sub-label node-id real-title))
-        (let* ((materia-node (org-roam-node-from-title-or-alias materia-title)) (materia-file (when materia-node (org-roam-node-file materia-node))))
-          (when materia-file (with-current-buffer (find-file-noselect materia-file)
-                               (goto-char (point-max)) (insert link-str) (save-buffer)))))))
-
-  (add-hook 'org-capture-after-finalize-hook #'my/org-roam-link-clase-to-materia))
+  (setq org-roam-dailies-capture-templates '(("d" "default" entry "* %<%I:%M %p>: \n%?" :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n")))))
 
 ;;; -----------------------------------------------------------------------
-;;; 5. TAREAS Y AGENDA
+;;; 5. ORG-ROAM: funciones personalizadas de captura
+;;; -----------------------------------------------------------------------
+
+;;; --- Auto-indexar Clases a Materia (Hub) ---
+(defun my/org-roam-link-clase-to-materia ()
+  "Vincula la nota de Clase recién creada al archivo de su Materia Hub.
+Se ejecuta en `org-capture-after-finalize-hook' si se usó la plantilla de Clase."
+  (interactive)
+  (when (and (boundp 'org-capture-plist)
+             (string= (plist-get org-capture-plist :key) "uc")
+             (not org-note-abort))
+    (let* ((cap-buffer (org-capture-get :buffer))
+           (new-file (and cap-buffer (buffer-file-name cap-buffer)))
+           (materia-title (my/org-roam-clase-get :materia-title))
+           (semana (my/org-roam-clase-get :semana))
+           (sesion (my/org-roam-clase-get :sesion))
+           (submateria (my/org-roam-clase-get :submateria))
+           (sub-label (if submateria (format " [%s]" submateria) ""))
+           real-title
+           node-id
+           link-str)
+
+      ;; 1. Extraemos el Título Real y garantizamos que exista un :ID:
+      ;; (goto-char point-min ANTES de org-id-get-create: si no, y el cursor
+      ;; queda bajo un heading del cuerpo al terminar la captura, Org le crea
+      ;; un :ID: nuevo a ESE heading en vez de reusar el del archivo, dejando
+      ;; un segundo :PROPERTIES: duplicado y un link apuntando al ID
+      ;; equivocado.)
+      (when (and new-file (file-exists-p new-file))
+        (with-current-buffer (find-file-noselect new-file)
+          (save-excursion
+            (goto-char (point-min))
+            (when (re-search-forward "^#\\+title:[ \t]*\\(.*\\)$" nil t)
+              (setq real-title (string-trim (match-string 1)))))
+          (goto-char (point-min))
+          (setq node-id (org-id-get-create))
+          (save-buffer))
+        (org-id-add-location node-id new-file)
+        (org-roam-db-update-file new-file))
+
+      (unless real-title
+        (setq real-title (plist-get org-capture-plist :description)))
+
+      ;; 2. Construimos el enlace (con [Submateria] si aplica)
+      (setq link-str
+            (if node-id
+                (format "- Semana %s, Sesión %s%s: [[id:%s][%s]]\n" semana sesion sub-label node-id real-title)
+              (format "- Semana %s, Sesión %s%s: [[roam:%s]]\n" semana sesion sub-label real-title)))
+
+      ;; 3. Insertamos el enlace en la Materia Hub, bajo el heading de
+      ;; Clases/Sesiones/Bitácora si existe, o creándolo si no
+      (let* ((materia-node (org-roam-node-from-title-or-alias materia-title))
+             (materia-file (when materia-node (org-roam-node-file materia-node))))
+        (if (and materia-file (file-exists-p materia-file))
+            (with-current-buffer (find-file-noselect materia-file)
+              (save-excursion
+                (goto-char (point-min))
+                (if (re-search-forward "^\\*+ \\(Clases\\|Sesiones\\|Bitácora\\)" nil t)
+                    (progn
+                      (org-end-of-subtree t t)
+                      (unless (bolp) (insert "\n")))
+                  (goto-char (point-max))
+                  (unless (bolp) (insert "\n"))
+                  (insert "* Clases\n"))
+                (insert link-str)
+                (save-buffer)))
+          (message "No se pudo autoindexar: No se encontró el archivo de la materia '%s'" materia-title))))))
+
+(add-hook 'org-capture-after-finalize-hook #'my/org-roam-link-clase-to-materia)
+
+;;; --- Captura rápida de tareas de Proyecto ---
+(defun my/org-roam-capture-task ()
+  (interactive)
+  ;; Agrega el archivo del proyecto a la agenda cuando termine la captura
+  (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+  ;; Captura la tarea, creando el archivo del proyecto si hace falta
+  (org-roam-capture- :node (org-roam-node-read
+                            nil
+                            (my/org-roam-filter-by-tag "Project"))
+                     :templates '(("p" "project" plain "** TODO %?"
+                                   :if-new (file+head+olp "%<%Y%m%d%H%M%S>-${slug}.org"
+                                                          "#+title: ${title}\n#+category: ${title}\n#+filetags: Project"
+                                                          ("Tasks"))))))
+
+(global-set-key (kbd "C-c n t") #'my/org-roam-capture-task)
+
+;;; --- Captura rápida al Inbox ---
+(defun my/org-roam-capture-inbox ()
+  (interactive)
+  (org-roam-capture- :node (org-roam-node-create)
+                     :templates '(("i" "inbox" plain "* %?"
+                                   :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
+
+(global-set-key (kbd "C-c n b") #'my/org-roam-capture-inbox)
+
+;;; --- Insertar nodo sin abrirlo (finaliza la captura de inmediato) ---
+(defun org-roam-node-insert-immediate (arg &rest args)
+  (interactive "P")
+  (let ((args (cons arg args))
+        (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                  '(:immediate-finish t)))))
+    (apply #'org-roam-node-insert args)))
+
+;;; -----------------------------------------------------------------------
+;;; 6. ORG-ROAM: copiar tarea completada (DONE) al diario de hoy
 ;;; -----------------------------------------------------------------------
 (after! org
+  ;; 1. La función para copiar la tarea al diario de hoy
+  (defun my/org-roam-copy-todo-to-today ()
+    (interactive)
+    (let ((org-refile-keep t) ;; Cambia a nil si prefieres MOVER en vez de COPIAR
+          (org-roam-dailies-capture-templates
+           '(("t" "tasks" entry "%?"
+              :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Tasks")))))
+          (org-after-refile-insert-hook #'save-buffer)
+          today-file
+          pos)
+      (save-window-excursion
+        (org-roam-dailies--capture (current-time) t)
+        (setq today-file (buffer-file-name))
+        (setq pos (point)))
+      ;; Solo archiva si el archivo destino es diferente al actual
+      (unless (equal (file-truename today-file)
+                     (file-truename (buffer-file-name)))
+        (org-refile nil nil (list "Tasks" today-file nil pos)))))
+
+  ;; 2. Función segura para el hook (evita bloqueos si algo falla)
   (defun my/org-roam-copy-todo-on-done-hook ()
-    (when (equal org-state "DONE") (ignore-errors (my/org-roam-copy-todo-to-today))))
+    "Ejecuta la copia al diario solo si el estado cambia a DONE."
+    (when (equal org-state "DONE")
+      (ignore-errors
+        (my/org-roam-copy-todo-to-today))))
+
+  ;; 3. Añadir el hook usando el método seguro de Emacs
   (add-hook 'org-after-todo-state-change-hook #'my/org-roam-copy-todo-on-done-hook))
 
+;;; -----------------------------------------------------------------------
+;;; 7. ORG-ROAM: agenda filtrada por tag "Project"
+;;; -----------------------------------------------------------------------
 (after! org-roam
-  (defun my/org-roam-filter-by-tag (tag-name) (lambda (node) (member tag-name (org-roam-node-tags node))))
-  (defun my/org-roam-refresh-agenda-list () (setq org-agenda-files (mapcar #'org-roam-node-file (seq-filter (my/org-roam-filter-by-tag "Project") (org-roam-node-list)))))
-  (my/org-roam-refresh-agenda-list))
+  (defun my/org-roam-filter-by-tag (tag-name)
+    (lambda (node)
+      (member tag-name (org-roam-node-tags node))))
+
+  (defun my/org-roam-list-notes-by-tag (tag-name)
+    (mapcar #'org-roam-node-file
+            (seq-filter
+             (my/org-roam-filter-by-tag tag-name)
+             (org-roam-node-list))))
+
+  (defun my/org-roam-refresh-agenda-list ()
+    (interactive)
+    (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
+
+  ;; Ejecutarlo al cargar
+  (my/org-roam-refresh-agenda-list)
+
+  (setq org-agenda-prefix-format
+        '((agenda . " %i %-12:c%?-12t% s")
+          (todo   . " %i %-12:c ")
+          (tags   . " %i %-12:c ")
+          (search . " %i %-12:c "))))
 
 ;;; -----------------------------------------------------------------------
-;;; 6. APARIENCIA DE ORG / MARKDOWN (estilo Obsidian para tomar notas)
+;;; 8. APARIENCIA DE ORG / MARKDOWN (estilo Obsidian para tomar notas)
 ;;; -----------------------------------------------------------------------
 
 ;; Caras de encabezado de markdown-mode (para archivos .md)
@@ -293,31 +414,13 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
 
 ;; IMPORTANTE: `doom-font' y `doom-variable-pitch-font' deben fijarse al nivel
 ;; superior del archivo (NUNCA dentro de un `after!'). Doom lee estas
-;; variables una sola vez al arrancar, en `doom-init-fonts-h'; si las pones
-;; dentro de `(after! org ...)' se fijan demasiado tarde (org solo carga
-;; cuando abres el primer .org, ya después de que Doom inicializó las
-;; fuentes) y por eso seguía viéndose JetBrains Mono en todos lados.
+;; variables una sola vez al arrancar, en `doom-init-fonts-h'.
 (setq doom-font (font-spec :family "JetBrains Mono" :size 15))
-;; Fuente serif para el texto de lectura/prosa de tus notas.
-;; Cambia "Noto Serif" por la serif que tengas instalada si prefieres otra
-;; (p. ej. "Georgia", "EB Garamond", "Liberation Serif").
 (setq doom-variable-pitch-font (font-spec :family "Noto Serif" :size 16))
 
 (after! org
   (add-hook 'org-mode-hook #'hl-todo-mode)
 
-  ;; OJO: antes esto estaba en `(custom-theme-set-faces! 'doom-one ...)', pero
-  ;; tu tema activo es `matugen', no `doom-one' — por eso nunca se aplicaba.
-  ;; `custom-set-faces!' (sin nombre de tema) se aplica encima de CUALQUIER
-  ;; tema activo.
-  ;;
-  ;; Usamos alturas ABSOLUTAS (en décimas de punto: 200 = 20pt) para todos los
-  ;; niveles, en vez de multiplicadores relativos (":height 1.6"). Los
-  ;; multiplicadores se calculan sobre la fuente que hereda cada cara — como
-  ;; `outline-N' hereda del `default' MONOESPACIADO (15pt), un heading
-  ;; profundo con multiplicador 1.0 terminaba más chico que el texto normal,
-  ;; que sí usa la serif de 20pt vía `mixed-pitch-mode'. Con números absolutos
-  ;; los headings siempre son >= que el cuerpo del texto (20pt), como debe ser.
   (custom-set-faces!
     '(org-document-title :height 230 :bold t :underline nil :family "Noto Serif")
     '(org-level-1 :inherit outline-1 :height 170 :weight bold :family "Noto Serif")
@@ -330,32 +433,21 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
     '(org-level-8 :inherit outline-3 :height 120 :family "Noto Serif")
     '(org-list-dt :family "Noto Serif"))
 
-  ;; --- Look "Obsidian / Markdown" para los .org --------------------------
-  (setq org-hide-emphasis-markers t)      ; oculta *negrita*, /cursiva/, etc.
-  (setq org-pretty-entities t)            ; renderiza símbolos LaTeX/UTF-8
-  (setq org-startup-indented t)           ; indentación tipo outline limpia
-  (setq org-startup-with-inline-images t) ; muestra imágenes al abrir el archivo
+  (setq org-hide-emphasis-markers t)
+  (setq org-pretty-entities t)
+  (setq org-startup-indented t)
+  (setq org-startup-with-inline-images t)
   (setq org-image-actual-width '(400))
   (setq org-ellipsis " ▾")
 
   (add-hook 'org-mode-hook #'org-indent-mode)
   (add-hook 'org-mode-hook #'visual-line-mode)
-
-  ;; Quitar los números de línea SOLO en los .org (el resto de buffers, como
-  ;; código, conservan `display-line-numbers-type' definido arriba)
   (add-hook 'org-mode-hook (lambda () (display-line-numbers-mode -1))))
 
-;; mixed-pitch-mode aplica la fuente serif (`doom-variable-pitch-font') solo
-;; al texto de prosa, y deja tablas, bloques de código, verbatim/código en
-;; línea y drawers con la fuente monoespaciada. Esto es lo que corrige el
-;; desalineado de las tablas: con una fuente proporcional en TODO el buffer
-;; una tabla nunca puede alinearse, porque cada carácter tiene un ancho
-;; distinto. Requiere añadir en $DOOMDIR/packages.el:
-;;   (package! mixed-pitch)
 (use-package! mixed-pitch
   :hook (org-mode . mixed-pitch-mode)
   :config
-  (setq mixed-pitch-set-height t) ; usa el tamaño de doom-variable-pitch-font
+  (setq mixed-pitch-set-height t)
   (dolist (face '(org-table
                   org-table-row
                   org-formula
@@ -374,20 +466,12 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
                   line-number-current-line))
     (add-to-list 'mixed-pitch-fixed-pitch-faces face)))
 
-;; visual-fill-column centra el texto y limita su ancho, igual que la vista
-;; de lectura de Obsidian, en vez de estirarse de borde a borde de la
-;; ventana. Requiere añadir en $DOOMDIR/packages.el:
-;;   (package! visual-fill-column)
 (use-package! visual-fill-column
   :hook (org-mode . visual-fill-column-mode)
   :init
-  (setq visual-fill-column-width 100     ; ancho del "papel" en columnas
+  (setq visual-fill-column-width 100
         visual-fill-column-center-text t))
 
-;; org-modern le da a org-mode una apariencia moderna (encabezados limpios,
-;; viñetas redondeadas, tablas con bordes suaves, checkboxes bonitos), muy
-;; similar a Obsidian/Markdown. Si el paquete no está instalado, añade en
-;; $DOOMDIR/packages.el la línea: (package! org-modern)
 (use-package! org-modern
   :hook (org-mode . org-modern-mode)
   :config
@@ -397,11 +481,9 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
    org-modern-block-fringe nil
    org-modern-hide-stars t))
 
-
 ;;; -----------------------------------------------------------------------
-;;; 7. KEYBINDINGS: org-roam
+;;; 9. KEYBINDINGS: org-roam
 ;;; -----------------------------------------------------------------------
-
 (after! org-roam
   (map! :leader
         :desc "Org-roam buffer"     "c n l" #'org-roam-buffer-toggle
@@ -426,7 +508,6 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
         :localleader
         :desc "Toggle LaTeX Preview" "x" #'org-latex-preview)
 
-
   (map! :prefix ("C-c n d" . "Dailies")
         :desc "Capture in yesterday journal" "Y" #'org-roam-dailies-capture-yesterday
         :desc "Capture in tomorrow journal" "T" #'org-roam-dailies-capture-tomorrow
@@ -438,6 +519,4 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
         :desc "Go to any day journal" "c" #'org-roam-dailies-goto-date
         :desc "Go to next journal" "b" #'org-roam-dailies-goto-next-note
         :desc "Go to previous journal" "f" #'org-roam-dailies-goto-previous-note
-        )
-
-  )
+        ))
