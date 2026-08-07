@@ -1,54 +1,78 @@
 {
-	description= "AM";
-   	inputs = {
-		nixpkgs.url = "nixpkgs/release-26.05";
-		home-manager ={
-			url = "github:nix-community/home-manager/release-26.05";	
-      			inputs.nixpkgs.follows = "nixpkgs";
-		};
+  description = "Dotfiles — NixOS (AM, laptop) + nix-on-droid (phone)";
+
+  inputs = {
+    nixpkgs.url = "nixpkgs/release-26.05";
+
+    home-manager = {
+      url = "github:nix-community/home-manager/release-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     mangowm = {
       url = "github:mangowm/mango";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     spicetify-nix = {
       url = "github:Gerg-L/spicetify-nix";
       inputs.nixpkgs.follows = "nixpkgs";
-	  };
+    };
+
     caelestia-shell = {
       url = "github:caelestia-dots/shell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # nix-on-droid usa su propio nixpkgs (no sigue 26.05 aún)
+    nix-on-droid = {
+      url = "github:nix-community/nix-on-droid/release-24.05";
+      inputs.home-manager.follows = "home-manager";
+    };
   };
 
-	outputs = {self, nixpkgs, home-manager,mangowm,spicetify-nix,caelestia-shell,...}:{
-		nixosConfigurations.AM = nixpkgs.lib.nixosSystem{
-			system = "x86_64-linux";
-			modules = [
-				mangowm.nixosModules.mango
-				./configuration.nix
-				home-manager.nixosModules.home-manager
-				{
-					home-manager ={
-						useGlobalPkgs = true;
-						useUserPackages = true;
-						users.lk = import ./home.nix;
-            sharedModules = [
-              spicetify-nix.homeManagerModules.spicetify
-              caelestia-shell.homeManagerModules.default
+  outputs = { self, nixpkgs, home-manager, mangowm, spicetify-nix, caelestia-shell, nix-on-droid, ... }:
+  let
+    sharedHomeModules = [
+      spicetify-nix.homeManagerModules.spicetify
+      caelestia-shell.homeManagerModules.default
+    ];
 
-            ];
-            extraSpecialArgs = { inherit spicetify-nix; };
-						backupFileExtension = "backup";
-					};
-				}
-			];
-		};
+    sharedArgs = { inherit spicetify-nix; };
 
+    mkNixosHost = { hostname, system ? "x86_64-linux" }:
+      nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          mangowm.nixosModules.mango
+          ./hosts/${hostname}/configuration.nix
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              users.lk = import ./hosts/${hostname}/home.nix;
+              sharedModules = sharedHomeModules;
+              extraSpecialArgs = sharedArgs;
+              backupFileExtension = "backup";
+            };
+          }
+        ];
+      };
+  in
+  {
+    nixosConfigurations = {
+      AM = mkNixosHost { hostname = "AM"; };
+      # Descomentar cuando el laptop esté listo:
+      # laptop = mkNixosHost { hostname = "laptop"; };
+    };
 
-	};
-
-
-
-
+    # Android via nix-on-droid (instalar desde F-Droid: Nix-on-Droid)
+    # Descomentar cuando el teléfono esté configurado:
+    # nixOnDroidConfigurations.phone = nix-on-droid.lib.nixOnDroidConfiguration {
+    #   pkgs = import nix-on-droid.inputs.nixpkgs { system = "aarch64-linux"; };
+    #   modules = [ ./hosts/phone/home.nix ];
+    #   extraSpecialArgs = sharedArgs;
+    # };
+  };
 }

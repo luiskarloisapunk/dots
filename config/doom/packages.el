@@ -13,6 +13,8 @@
 ;; (package! some-package)
 (package! mixed-pitch)
 (package! org-modern)
+(package! org-super-agenda)
+(package! org-roam-ui)
 (package! visual-fill-column)
 (package! super-save)
 ;; To install a package directly from a remote git repo, you must specify a

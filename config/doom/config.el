@@ -83,8 +83,10 @@
 (after! org
   (setq org-preview-latex-default-process 'dvisvgm)
   (plist-put org-format-latex-options :scale 1.3)
-  (setq org-startup-with-latex-preview t))
+  (setq org-startup-with-latex-preview t)
+  (setq org-agenda-files '("~/coco/"))
 
+  )
 (after! org-appear
   (setq org-appear-autoorg-latex t)
   (setq org-appear-trigger 'manual)
@@ -264,11 +266,31 @@ separado por submateria (Matemáticas Sesión 1, 2... y Física Sesión
 
   ;; --- Configuración de Captura ---
   (setq org-roam-capture-templates
-        `(("u" "Universidad")
-          ("um" "Materia (Hub)" plain "%?" :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" ,(my/read-template-file "~/coco/templates/materiaTemplate.org")) :unnarrowed t)
-          ("uc" "Clase" plain "%?" :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" ,(my/read-template-file "~/coco/templates/claseTemplate.org")) :unnarrowed t)
-          ("p" "Problemas (ICPC/OMUM)" plain (file "~/coco/templates/problemTemplate.org") :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :Competitiva:\n") :unnarrowed t)
-          ("e" "Escritura" plain "* %?\n\n#+begin_verse\n\n#+end_verse" :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :Escritura:\n") :unnarrowed t)
+        `(("u" "un")
+          ("um" "materia" plain "%?" :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" ,(my/read-template-file "~/coco/templates/materiaTemplate.org")) :unnarrowed t)
+          ("uc" "clase" plain "%?" :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org" ,(my/read-template-file "~/coco/templates/claseTemplate.org")) :unnarrowed t)
+          ("a" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+           :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+           :unnarrowed t)
+          ("p" "problema" plain (file "~/coco/templates/problemTemplate.org") :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: :Competitiva:\n") :unnarrowed t)
+          ("e" "estudio" plain
+           "%?"
+           :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                              "#+title: ${title}\n#+date: %U\n
+#+filetags: :estudio:
+
+* Introducción
+
+* Definición
+
+* Referencias / Conexiones
+- ")
+           :unnarrowed t)
+
+          ("d" "default" plain "%?"
+           :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+date: %U\n")
+           :unnarrowed t)
+
           ("b" "book notes" plain (file "~/coco/templates/bookTemplate.org") :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n") :unnarrowed t)))
 
   (setq org-roam-dailies-capture-templates '(("d" "default" entry "* %<%I:%M %p>: \n%?" :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n")))))
@@ -523,39 +545,40 @@ Se ejecuta en `org-capture-after-finalize-hook' si se usó la plantilla de Clase
 ;;; -----------------------------------------------------------------------
 ;;; 9. KEYBINDINGS: org-roam
 ;;; -----------------------------------------------------------------------
-(after! org-roam
-  (map! :leader
-        :desc "Org-roam buffer"     "c n l" #'org-roam-buffer-toggle
-        :desc "Find node"           "c n f" #'org-roam-node-find
-        :desc "Insert node"         "c n i" #'org-roam-node-insert
-        :desc "Insert node (discreet)" "C-c n I" #'org-roam-node-insert-immediate
-        (:prefix ("t" . "toggle")
-         :desc "Toggle eshell split"            "e" #'+eshell/toggle
-         :desc "Toggle line highlight in frame" "h" #'hl-line-mode
-         :desc "Toggle line highlight globally" "H" #'global-hl-line-mode
-         :desc "Toggle line numbers"            "l" #'doom/toggle-line-numbers
-         :desc "Toggle markdown-view-mode"      "m" #'dt/toggle-markdown-view-mode
-         :desc "Toggle truncate lines"          "t" #'toggle-truncate-lines
-         :desc "Toggle treemacs"                "T" #'+treemacs/toggle
-         :desc "Toggle ghostel split"             "g" #'+ghostel/toggle
-         )
-        )
-  (map! :i "C-c n i" #'org-roam-node-insert-immediate)
+                                        ;(after! org-roam
+(map! :leader
+      :desc "Org-roam buffer"     "c n l" #'org-roam-buffer-toggle
+      :desc "Find node"           "c n f" #'org-roam-node-find
+      :desc "Insert node"         "c n i" #'org-roam-node-insert
+      :desc "Insert node (discreet)" "C-c n I" #'org-roam-node-insert-immediate
+      (:prefix ("t" . "toggle")
+       :desc "Toggle eshell split"            "e" #'+eshell/toggle
+       :desc "Toggle line highlight in frame" "h" #'hl-line-mode
+       :desc "Toggle line highlight globally" "H" #'global-hl-line-mode
+       :desc "Toggle line numbers"            "l" #'doom/toggle-line-numbers
+       :desc "Toggle markdown-view-mode"      "m" #'dt/toggle-markdown-view-mode
+       :desc "Toggle truncate lines"          "t" #'toggle-truncate-lines
+       :desc "Toggle treemacs"                "T" #'+treemacs/toggle
+       :desc "Toggle ghostel split"             "g" #'+ghostel/toggle
+       )
+      )
+(map! :i "C-c n i" #'org-roam-node-insert-immediate)
 
-  (map! :map org-mode-map
-        "C-M-i" #'completion-at-point
-        :localleader
-        :desc "Toggle LaTeX Preview" "x" #'org-latex-preview)
+(map! :map org-mode-map
+      "C-M-i" #'completion-at-point
+      :localleader
+      :desc "Toggle LaTeX Preview" "x" #'org-latex-preview)
 
-  (map! :prefix ("C-c n d" . "Dailies")
-        :desc "Capture in yesterday journal" "Y" #'org-roam-dailies-capture-yesterday
-        :desc "Capture in tomorrow journal" "T" #'org-roam-dailies-capture-tomorrow
-        :desc "Capture in today journal" "n" #'org-roam-dailies-capture-today
-        :desc "Go to today journal" "d" #'org-roam-dailies-goto-today
-        :desc "Go to yesterday journal" "y" #'org-roam-dailies-goto-yesterday
-        :desc "Go to tomorrow journal" "t" #'org-roam-dailies-goto-tomorrow
-        :desc "Capture in any day journal" "v" #'org-roam-dailies-capture-date
-        :desc "Go to any day journal" "c" #'org-roam-dailies-goto-date
-        :desc "Go to next journal" "b" #'org-roam-dailies-goto-next-note
-        :desc "Go to previous journal" "f" #'org-roam-dailies-goto-previous-note
-        ))
+(map! :prefix ("C-c n d" . "Dailies")
+      :desc "Capture in yesterday journal" "Y" #'org-roam-dailies-capture-yesterday
+      :desc "Capture in tomorrow journal" "T" #'org-roam-dailies-capture-tomorrow
+      :desc "Capture in today journal" "n" #'org-roam-dailies-capture-today
+      :desc "Go to today journal" "d" #'org-roam-dailies-goto-today
+      :desc "Go to yesterday journal" "y" #'org-roam-dailies-goto-yesterday
+      :desc "Go to tomorrow journal" "t" #'org-roam-dailies-goto-tomorrow
+      :desc "Capture in any day journal" "v" #'org-roam-dailies-capture-date
+      :desc "Go to any day journal" "c" #'org-roam-dailies-goto-date
+      :desc "Go to next journal" "b" #'org-roam-dailies-goto-next-note
+      :desc "Go to previous journal" "f" #'org-roam-dailies-goto-previous-note
+      )
+                                        ;)

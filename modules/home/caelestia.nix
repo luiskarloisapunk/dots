@@ -152,7 +152,7 @@ xdg.configFile."caelestia/templates/kitty.conf".text = ''
       
       general = {
         apps= {
-          terminal = ["foot"];
+          terminal = ["kitty"];
           explorer = ["yazi"];
         };
         idle= {
@@ -195,13 +195,13 @@ xdg.configFile."caelestia/templates/kitty.conf".text = ''
       dashboard = {
         showPerformance = false;
         showWeather = false;
-        resourceUpdateInterval = 100;
+        resourceUpdateInterval = 0;
         dragThreshold = 20;
       };
 
       launcher = {
         showOnHover = true ;
-        enableDangerousActions = true;
+        enableDangerousActions = false;
         dragThreshold = 10;
         useFuzzy= {
           apps = true;
@@ -220,7 +220,7 @@ xdg.configFile."caelestia/templates/kitty.conf".text = ''
       services = {
         weatherLocation= "Culiacán";
         useFahrenheit = false;
-        useTwelveHourClock = true;
+        useTwelveHourClock = false;
       };
 
       utilities = {
