@@ -27,6 +27,8 @@
   environment.etc."hyprspace-path".text =
     "${pkgs.hyprlandPlugins.hyprspace}/lib/libhyprspace.so\n";
 
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+
   programs.mango.enable = true;
 
   xdg.terminal-exec = {
