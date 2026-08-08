@@ -9,7 +9,7 @@
     ../../modules/nixos/syncthing.nix
   ];
 
-  networking.hostName = "laptop"; # cambiar al hostname real
+  networking.hostName = "am"; # cambiar al hostname real
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

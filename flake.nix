@@ -64,7 +64,7 @@
     nixosConfigurations = {
       AM = mkNixosHost { hostname = "AM"; };
       # Descomentar cuando el laptop esté listo:
-      # laptop = mkNixosHost { hostname = "laptop"; };
+      laptop = mkNixosHost { hostname = "am"; };
     };
 
     # Android via nix-on-droid (instalar desde F-Droid: Nix-on-Droid)
