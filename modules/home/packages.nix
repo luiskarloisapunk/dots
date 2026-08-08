@@ -32,6 +32,6 @@
     gamemode
     udisks
     rnote
-    zen-browser
+    pkgs."zen-browser"
   ];
 }
