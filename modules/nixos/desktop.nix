@@ -54,4 +54,6 @@
   };
 
   hardware.opentabletdriver.enable = true;
+
+  services.flatpak.enable = true;
 }

@@ -32,7 +32,6 @@
     gamemode
     udisks
     rnote
-    stremio-linux-shell
     zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 }
