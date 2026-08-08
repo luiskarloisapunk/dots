@@ -36,7 +36,7 @@
 
   users.users.lk = {
     isNormalUser = true;
-    extraGroups = [ "wheel" ];
+    extraGroups = [ "wheel" "opentabletdriver" ];
     packages = with pkgs; [ tree ];
   };
 

@@ -9,6 +9,7 @@ let
     quickshell = "quickshell";
     hypr = "hypr";
     doom = "doom";
+    yazi = "yazi";
   };
 in
 

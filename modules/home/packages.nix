@@ -30,5 +30,8 @@
     hledger
     claude-code
     gamemode
+    udisks
+    rnote
+    zen-browser
   ];
 }

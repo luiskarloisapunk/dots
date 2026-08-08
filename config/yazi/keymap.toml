@@ -1,0 +1,56 @@
+# clipboard — yank + sync to system clipboard; paste from it
+[[mgr.prepend_keymap]]
+on  = "y"
+run = ["yank", "plugin clipboard -- --action=copy"]
+desc = "Yank and copy to system clipboard"
+
+[[mgr.prepend_keymap]]
+on  = "<C-p>"
+run = "plugin clipboard -- --action=paste"
+desc = "Paste from system clipboard"
+
+# mount — browse and manage block devices / partitions
+[[mgr.prepend_keymap]]
+on  = "M"
+run = "plugin mount"
+desc = "Mount manager"
+
+# compress — archive selected files
+[[mgr.prepend_keymap]]
+on  = ["c", "a"]
+run = "plugin compress"
+desc = "Compress selected files"
+
+# convert — convert images with ImageMagick
+[[mgr.prepend_keymap]]
+on  = ["c", "p"]
+run = "plugin convert -- --extension='png'"
+desc = "Convert to PNG"
+
+[[mgr.prepend_keymap]]
+on  = ["c", "j"]
+run = "plugin convert -- --extension='jpg'"
+desc = "Convert to JPG"
+
+[[mgr.prepend_keymap]]
+on  = ["c", "w"]
+run = "plugin convert -- --extension='webp'"
+desc = "Convert to WebP"
+
+# drag — drag-and-drop via ripdrag
+[[mgr.prepend_keymap]]
+on  = "<C-d>"
+run = "plugin drag"
+desc = "Drag files"
+
+# kdeconnect-send — send files to a paired KDE Connect device
+[[mgr.prepend_keymap]]
+on  = "<C-k>"
+run = "plugin kdeconnect-send"
+desc = "Send via KDE Connect"
+
+# omni-trash — unified trash manager across all drives
+[[mgr.prepend_keymap]]
+on  = "<A-t>"
+run = "plugin omni-trash"
+desc = "Open trash manager"

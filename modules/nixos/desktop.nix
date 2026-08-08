@@ -52,4 +52,6 @@
     enable = true;
     extest.enable = true;
   };
+
+  hardware.opentabletdriver.enable = true;
 }
