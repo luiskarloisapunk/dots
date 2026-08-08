@@ -31,5 +31,15 @@
 
   environment.systemPackages = [ pkgs.brightnessctl ];
 
+  services.syncthing.settings = {
+    devices."AM".id = "CE2IQN7-QWM6GN5-MY653EL-PVR3UTP-NRY3KBV-ZZPKMLJ-RQTVLGD-UC64RQ7";
+    folders = {
+      "/home/lk/coco"     = { id = "coco";     devices = [ "AM" ]; };
+      "/home/lk/personal" = { id = "personal"; devices = [ "AM" ]; };
+      "/home/lk/org"      = { id = "org";      devices = [ "AM" ]; };
+      "/home/lk/library"  = { id = "library";  devices = [ "AM" ]; };
+    };
+  };
+
   system.stateVersion = "26.05";
 }
