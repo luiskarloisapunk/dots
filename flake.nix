@@ -24,6 +24,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    zen-browser = {
+      url = "github:youwen5/zen-browser-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # nix-on-droid usa su propio nixpkgs (no sigue 26.05 aún)
     nix-on-droid = {
       url = "github:nix-community/nix-on-droid/release-24.05";
@@ -31,14 +36,14 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, mangowm, spicetify-nix, caelestia-shell, nix-on-droid, ... }:
+  outputs = { self, nixpkgs, home-manager, mangowm, spicetify-nix, caelestia-shell, nix-on-droid, zen-browser, ... }:
   let
     sharedHomeModules = [
       spicetify-nix.homeManagerModules.spicetify
       caelestia-shell.homeManagerModules.default
     ];
 
-    sharedArgs = { inherit spicetify-nix; };
+    sharedArgs = { inherit spicetify-nix zen-browser; };
 
     mkNixosHost = { hostname, system ? "x86_64-linux" }:
       nixpkgs.lib.nixosSystem {

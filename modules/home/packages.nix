@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, zen-browser, ... }:
 
 {
   home.packages = with pkgs; [
@@ -32,6 +32,6 @@
     gamemode
     udisks
     rnote
-    pkgs."zen-browser"
+    zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 }
