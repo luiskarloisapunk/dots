@@ -261,7 +261,9 @@ hl.gesture({
     action    = "workspace",
 })
 
-local hyprspace = os.getenv("HYPRSPACE_SO")
+local _hsp = io.open("/etc/hyprspace-path", "r")
+local hyprspace = _hsp and _hsp:read("*l") or nil
+if _hsp then _hsp:close() end
 if hyprspace then hl.exec_cmd("hyprctl plugin load " .. hyprspace) end
 
 -- Example per-device config

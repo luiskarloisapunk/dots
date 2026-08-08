@@ -24,8 +24,8 @@
 
   programs.hyprland.enable = true;
 
-  environment.sessionVariables.HYPRSPACE_SO =
-    "${pkgs.hyprlandPlugins.hyprspace}/lib/libhyprspace.so";
+  environment.etc."hyprspace-path".text =
+    "${pkgs.hyprlandPlugins.hyprspace}/lib/libhyprspace.so\n";
 
   programs.mango.enable = true;
 
