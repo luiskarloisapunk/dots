@@ -1,6 +1,5 @@
 { ... }:
 
-# TODO: correr nixos-generate-config en el laptop y agregar hardware-configuration.nix aquí.
 {
   imports = [
     ./hardware-configuration.nix
@@ -9,7 +8,7 @@
     ../../modules/nixos/syncthing.nix
   ];
 
-  networking.hostName = "am"; # cambiar al hostname real
+  networking.hostName = "am";
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

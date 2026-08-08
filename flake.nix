@@ -1,5 +1,5 @@
 {
-  description = "Dotfiles — NixOS (AM, laptop) + nix-on-droid (phone)";
+  description = "Dotfiles — NixOS (AM, am) + nix-on-droid (phone)";
 
   inputs = {
     nixpkgs.url = "nixpkgs/release-26.05";
@@ -63,8 +63,7 @@
   {
     nixosConfigurations = {
       AM = mkNixosHost { hostname = "AM"; };
-      # Descomentar cuando el laptop esté listo:
-      laptop = mkNixosHost { hostname = "am"; };
+      am = mkNixosHost { hostname = "am"; };
     };
 
     # Android via nix-on-droid (instalar desde F-Droid: Nix-on-Droid)
