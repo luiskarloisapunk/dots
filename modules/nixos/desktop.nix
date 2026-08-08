@@ -24,6 +24,8 @@
 
   programs.hyprland.enable = true;
 
+  environment.systemPackages = [ pkgs.hyprlandPlugins.hyprspace ];
+
   programs.mango.enable = true;
 
   xdg.terminal-exec = {

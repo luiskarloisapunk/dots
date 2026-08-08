@@ -5,6 +5,7 @@
     bar.status.showBattery = lib.mkForce true;
     osd.enableBrightness = lib.mkForce true;
     bar.scrollActions.brightness = lib.mkForce true;
+    utilities.toasts.chargingChanged = lib.mkForce true;
   };
 
   home.sessionVariables = {

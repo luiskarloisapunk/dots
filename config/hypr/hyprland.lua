@@ -22,7 +22,7 @@
 ------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
-local _hf = io.popen("hostname")
+local _hf = io.open("/etc/hostname", "r")
 local _hostname = _hf and _hf:read("*l") or ""
 if _hf then _hf:close() end
 
@@ -30,7 +30,7 @@ hl.monitor({
     output   = "",
     mode     = "preferred",
     position = "auto",
-    scale    = (_hostname == "am") and 1.0 or "auto",
+    scale    = (_hostname == "am") and 1.2 or "auto",
 })
 
 
@@ -246,16 +246,22 @@ hl.config({
         sensitivity = 0, -- -1.0 - 1.0, 0 means no modification.
 
         touchpad = {
-            natural_scroll = false,
+            natural_scroll    = false,
+            tap_to_click      = true,
+            tap_button_map    = "lmr",
+            drag_lock         = true,
+            scroll_factor     = 0.3,
         },
     },
 })
 
 hl.gesture({
-    fingers = 3,
+    fingers   = 3,
     direction = "horizontal",
-    action = "workspace"
+    action    = "workspace",
 })
+
+hl.exec_cmd("hyprctl plugin load /run/current-system/sw/lib/libhyprspace.so")
 
 -- Example per-device config
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Devices/ for more
@@ -410,6 +416,7 @@ local function zoom(offset)
     hl.config({ cursor = { zoom_factor = current } })
 end
 
+hl.bind("SUPER + A", hl.dsp.exec_cmd("hyprctl dispatch overview:toggle"))
 hl.bind("SUPER + Z", zoom)
 hl.bind("SUPER + SHIFT + equal", function()
     zoom(0.5)
