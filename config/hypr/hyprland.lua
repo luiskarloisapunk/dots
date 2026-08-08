@@ -261,8 +261,6 @@ hl.gesture({
     action    = "workspace",
 })
 
-hl.exec_cmd("hyprctl plugin load /run/current-system/sw/lib/libhyprspace.so")
-
 -- Example per-device config
 -- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Devices/ for more
 hl.device({

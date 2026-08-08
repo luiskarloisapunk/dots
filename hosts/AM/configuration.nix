@@ -13,7 +13,6 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # Reemplaza LAPTOP_DEVICE_ID con el ID real del laptop (ver http://localhost:8384 en el laptop)
   services.syncthing.settings = {
     devices."am".id = "ERR3JLQ-4PZGOEB-OFRIT4K-A6HIHDM-QLVEQ5X-D5N5Q6C-7KD7EBO-GT3NYQT";
     folders = {

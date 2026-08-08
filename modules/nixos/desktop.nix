@@ -22,9 +22,10 @@
 
   services.libinput.enable = false;
 
-  programs.hyprland.enable = true;
-
-  environment.systemPackages = [ pkgs.hyprlandPlugins.hyprspace ];
+  programs.hyprland = {
+    enable = true;
+    plugins = [ pkgs.hyprlandPlugins.hyprspace ];
+  };
 
   programs.mango.enable = true;
 
