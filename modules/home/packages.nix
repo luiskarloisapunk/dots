@@ -29,6 +29,5 @@
     yazi
     hledger
     claude-code
-    steam
   ];
 }

@@ -42,4 +42,6 @@
     enable = true;
     powerOnBoot = false;
   };
+
+  programs.steam.enable = true;
 }
