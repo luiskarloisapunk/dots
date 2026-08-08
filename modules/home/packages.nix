@@ -29,5 +29,6 @@
     yazi
     hledger
     claude-code
+    gamemode
   ];
 }

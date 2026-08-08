@@ -22,11 +22,15 @@
 ------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
+local _hf = io.popen("hostname")
+local _hostname = _hf and _hf:read("*l") or ""
+if _hf then _hf:close() end
+
 hl.monitor({
     output   = "",
     mode     = "preferred",
     position = "auto",
-    scale    = "auto",
+    scale    = (_hostname == "am") and 1.0 or "auto",
 })
 
 
@@ -194,6 +198,11 @@ hl.config({
 hl.window_rule({
   match = { class = "Emacs" },
   opacity = "0.85 0.85"
+})
+
+hl.window_rule({
+  match = { class = "Spotify" },
+  tile = true,
 })
 -- See https://wiki.hypr.land/Configuring/Layouts/Master-Layout/ for more
 hl.config({

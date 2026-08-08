@@ -7,6 +7,7 @@
     ../../modules/home/packages.nix
     ../../modules/home/caelestia.nix
     ../../modules/home/spicetify.nix
+    ../../modules/home/laptop.nix
   ];
 
   home.username = "lk";
