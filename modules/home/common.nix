@@ -18,8 +18,8 @@ let
     name = "hladd";
     runtimeInputs = [ ];
     text = ''
-      # Captura rápida de un gasto al journal del año actual.
-      # Uso: hladd "descripción" monto categoria [cuenta_origen]
+      # Captura rápida de un gasto personal al journal del año actual.
+      # La tarjeta banamex:colegiatura NO es válida aquí — usa hlcol para eso.
       JOURNAL_DIR="${financeDir}"
       YEAR=$(date +%Y)
       JOURNAL_FILE="$JOURNAL_DIR/''${YEAR}.journal"
@@ -27,13 +27,15 @@ let
 
       if [[ $# -lt 3 ]]; then
         echo "Uso: hladd \"descripción\" monto categoria [cuenta_origen]"
-        echo "  categoria: comida:universidad | comida:super | transporte | materiales"
-        echo "             tecnologia | salud | ropa | entretenimiento | colegiatura | varios"
-        echo "  cuenta_origen (default: efectivo)"
+        echo "  categoria:    comida:universidad | comida:super | transporte | materiales"
+        echo "                tecnologia | salud | ropa | entretenimiento | fijos | varios"
+        echo "  cuenta_origen: efectivo (default) | beca | ahorros | credito"
+        echo ""
+        echo "  Para pagos de colegiatura usa: hlcol"
         echo ""
         echo "Ejemplos:"
         echo "  hladd \"Tacos\" 60 comida:universidad"
-        echo "  hladd \"Uber\" 85 transporte banamex:beca"
+        echo "  hladd \"Uber\" 85 transporte beca"
         exit 1
       fi
 
@@ -42,23 +44,59 @@ let
       CATEGORIA="$3"
       ORIGEN="''${4:-efectivo}"
 
+      if [[ "$ORIGEN" == "colegiatura" ]]; then
+        echo "Error: banamex:colegiatura es exclusiva para pagos escolares."
+        echo "Usa: hlcol \"descripción\" monto"
+        exit 1
+      fi
+
       case "$ORIGEN" in
-        efectivo)          ORIGEN_CUENTA="assets:efectivo" ;;
-        beca)              ORIGEN_CUENTA="assets:banamex:beca" ;;
-        ahorros)           ORIGEN_CUENTA="assets:banamex:ahorros" ;;
-        colegiatura)       ORIGEN_CUENTA="assets:banamex:colegiatura" ;;
-        credito|crédito)   ORIGEN_CUENTA="liabilities:credito" ;;
-        *)                 ORIGEN_CUENTA="assets:$ORIGEN" ;;
+        efectivo)        ORIGEN_CUENTA="assets:efectivo" ;;
+        beca)            ORIGEN_CUENTA="assets:bancomer:beca" ;;
+        ahorros)         ORIGEN_CUENTA="assets:bancomer:ahorros" ;;
+        credito|crédito) ORIGEN_CUENTA="liabilities:credito" ;;
+        *)               ORIGEN_CUENTA="assets:$ORIGEN" ;;
       esac
 
       cat >> "$JOURNAL_FILE" << ENTRY
 
-      $DATE * $DESC
-          expenses:$CATEGORIA    $MONTO MXN
-          $ORIGEN_CUENTA
-      ENTRY
+$DATE * $DESC
+    expenses:$CATEGORIA    $MONTO MXN
+    $ORIGEN_CUENTA
+ENTRY
 
       echo "Agregado: $DATE $DESC — MXN $MONTO en expenses:$CATEGORIA"
+    '';
+  };
+
+  hlcol = pkgs.writeShellApplication {
+    name = "hlcol";
+    runtimeInputs = [ ];
+    text = ''
+      # Registra un pago de colegiatura desde banamex:colegiatura.
+      # Uso: hlcol "descripción" monto
+      JOURNAL_DIR="${financeDir}"
+      YEAR=$(date +%Y)
+      JOURNAL_FILE="$JOURNAL_DIR/''${YEAR}.journal"
+      DATE=$(date +%Y-%m-%d)
+
+      if [[ $# -lt 2 ]]; then
+        echo "Uso: hlcol \"descripción\" monto"
+        echo "Ejemplo: hlcol \"Colegiatura agosto\" 15000"
+        exit 1
+      fi
+
+      DESC="$1"
+      MONTO="$2"
+
+      cat >> "$JOURNAL_FILE" << ENTRY
+
+$DATE * $DESC
+    expenses:colegiatura    $MONTO MXN
+    assets:banamex:colegiatura
+ENTRY
+
+      echo "Registrado: $DATE $DESC — MXN $MONTO (colegiatura)"
     '';
   };
 in
@@ -83,13 +121,13 @@ in
       nrs    = "git -C ~/.dots pull --rebase && sudo nixos-rebuild switch --flake ~/.dots#$(hostname)";
       # hledger — finanzas
       hl     = "hledger";
-      hlbal  = "hledger bal -M --tree";
+      hlbal  = "hledger bal -M --tree not:assets:banamex:colegiatura not:equity";
       hlgasto = "hledger bal expenses -M --tree";
       hlrep  = "hledger is -M";
     };
   };
 
-  home.packages = [ hladd ];
+  home.packages = [ hladd hlcol ];
 
   home.sessionVariables = {
     LEDGER_FILE = "${financeDir}/main.journal";
