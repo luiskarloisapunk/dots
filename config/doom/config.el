@@ -5,6 +5,7 @@
 ;;; -----------------------------------------------------------------------
 (setq display-line-numbers-type t)
 (setq confirm-kill-emacs nil)
+(add-to-list 'default-frame-alist '(alpha-background . 85))
 
 ;;; -----------------------------------------------------------------------
 ;;; 2. TEMA: Caelestia / Matugen
@@ -448,7 +449,7 @@ Se ejecuta en `org-capture-after-finalize-hook' si se usó la plantilla de Clase
 
   (defun my/org-roam-refresh-agenda-list ()
     (interactive)
-    (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
+    (setq org-agenda-files (directory-files-recursively "~/coco/" "\\.org$")))
 
   ;; Ejecutarlo al cargar
   (my/org-roam-refresh-agenda-list)
@@ -459,19 +460,67 @@ Se ejecuta en `org-capture-after-finalize-hook' si se usó la plantilla de Clase
           (tags   . " %i %-12:c ")
           (search . " %i %-12:c "))))
 
+(after! org-agenda
+  (setq org-agenda-block-separator ?─
+        org-agenda-time-grid '((daily today require-timed)
+                               (800 1000 1200 1400 1600 1800 2000)
+                               " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+        org-agenda-current-time-string "◀── ahora")
+
+  (setq org-agenda-custom-commands
+        '(("e" "Escuela"
+           ((agenda "" ((org-agenda-span 7)
+                        (org-agenda-overriding-header "Esta semana")))
+            (todo "TODO" ((org-agenda-overriding-header "Todas las tareas"))))))))
+
+(use-package! org-super-agenda
+  :after org-agenda
+  :config
+  (org-super-agenda-mode)
+  (setq org-super-agenda-groups
+        '((:name "Hoy"
+           :time-grid t
+           :date today
+           :scheduled today
+           :order 1)
+          (:name "Urgente"
+           :priority "A"
+           :order 2)
+          (:name "Escuela"
+           :tag ("Materia" "Clase" "escuela" "tarea" "parcial")
+           :order 3)
+          (:name "Proyectos"
+           :tag "Project"
+           :order 4)
+          (:name "Normal"
+           :priority "B"
+           :order 5)
+          (:name "Después"
+           :priority "C"
+           :order 6))))
+
 ;;; -----------------------------------------------------------------------
 ;;; 8. APARIENCIA DE ORG / MARKDOWN (estilo Obsidian para tomar notas)
 ;;; -----------------------------------------------------------------------
 
 ;; Caras de encabezado de markdown-mode (para archivos .md)
 (custom-set-faces!
-  '(markdown-header-face :inherit font-lock-function-name-face :weight bold :family "variable-pitch")
-  '(markdown-header-face-1 :inherit markdown-header-face :height 1.6)
-  '(markdown-header-face-2 :inherit markdown-header-face :height 1.5)
-  '(markdown-header-face-3 :inherit markdown-header-face :height 1.4)
-  '(markdown-header-face-4 :inherit markdown-header-face :height 1.3)
-  '(markdown-header-face-5 :inherit markdown-header-face :height 1.2)
-  '(markdown-header-face-6 :inherit markdown-header-face :height 1.1))
+  '(markdown-header-face :inherit font-lock-function-name-face :weight bold :family "Noto Serif")
+  '(markdown-header-face-1 :inherit markdown-header-face :height 1.7)
+  '(markdown-header-face-2 :inherit markdown-header-face :height 1.6)
+  '(markdown-header-face-3 :inherit markdown-header-face :height 1.5)
+  '(markdown-header-face-4 :inherit markdown-header-face :height 1.4)
+  '(markdown-header-face-5 :inherit markdown-header-face :height 1.3)
+  '(markdown-header-face-6 :inherit markdown-header-face :height 1.2))
+
+;; Markdown: mismo estilo visual que Org
+(after! markdown-mode
+  (add-hook 'markdown-mode-hook #'mixed-pitch-mode)
+  (add-hook 'markdown-mode-hook #'visual-fill-column-mode)
+  (add-hook 'markdown-mode-hook #'visual-line-mode)
+  (add-hook 'markdown-mode-hook (lambda ()
+    (display-line-numbers-mode -1)
+    (hl-line-mode -1))))
 
 ;; IMPORTANTE: `doom-font' y `doom-variable-pitch-font' deben fijarse al nivel
 ;; superior del archivo (NUNCA dentro de un `after!'). Doom lee estas

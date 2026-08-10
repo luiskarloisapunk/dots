@@ -1,6 +1,23 @@
 { config, pkgs, ... }:
 
 {
+  gtk = {
+    enable = true;
+    gtk3.extraCss = ''
+      headerbar {
+        min-height: 0;
+        padding: 0 4px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+      }
+      headerbar button,
+      headerbar .title,
+      headerbar .subtitle {
+        display: none;
+      }
+    '';
+  };
   programs.kitty = {
     enable = true;
     font = {

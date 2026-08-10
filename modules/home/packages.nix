@@ -33,5 +33,6 @@
     udisks
     rnote
     zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
-  ];
+    localsend
+];
 }

@@ -55,8 +55,9 @@ hl.env("HYPRCURSOR_SIZE", "")
 -- Autostart necessary processes (like notifications daemons, status bars, etc.)
 -- Or execute your favorite apps at launch like this:
 --
- hl.on("hyprland.start", function () 
+ hl.on("hyprland.start", function ()
   hl.exec_cmd("caelestia-shell")
+  hl.exec_cmd("localsend --hidden")
  end)
 
 
@@ -196,8 +197,17 @@ hl.config({
 })
 
 hl.window_rule({
-  match = { class = "Emacs" },
+  match = { class = "emacs" },
   opacity = "0.85 0.85"
+})
+
+hl.window_rule({
+  match       = { class = "localsend_app" },
+  float       = true,
+  center      = true,
+  size        = "820 560",
+  opacity     = "0.95 0.92",
+  border_size = 0,
 })
 
 hl.window_rule({
