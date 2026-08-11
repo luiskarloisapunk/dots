@@ -592,7 +592,18 @@ Se ejecuta en `org-capture-after-finalize-hook' si se usó la plantilla de Clase
    org-modern-hide-stars t))
 
 ;;; -----------------------------------------------------------------------
-;;; 9. KEYBINDINGS: org-roam
+;;; 9. ORG-NOTER
+;;; -----------------------------------------------------------------------
+(use-package! org-noter
+  :after org
+  :config
+  (setq org-noter-notes-search-path '("~/coco/")
+        org-noter-auto-save-last-location t
+        org-noter-always-create-frame nil
+        org-noter-kill-frame-at-session-end nil))
+
+;;; -----------------------------------------------------------------------
+;;; 10. KEYBINDINGS: org-roam
 ;;; -----------------------------------------------------------------------
                                         ;(after! org-roam
 (map! :leader

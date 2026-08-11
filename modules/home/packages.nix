@@ -34,5 +34,20 @@
     rnote
     zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
     localsend
-];
+    zoom-us
+    foliate
+    libreoffice
+    (writeShellApplication {
+      name = "pptx-to-pdf";
+      runtimeInputs = [ libreoffice ];
+      text = ''
+        tmpdir=$(mktemp -d)
+        for f in "$@"; do
+          soffice --headless --convert-to pdf --outdir "$tmpdir" "$f"
+          base=$(basename "''${f%.*}")
+          zen "$tmpdir/$base.pdf" &
+        done
+      '';
+    })
+  ];
 }

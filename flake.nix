@@ -29,6 +29,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nur = {
+      url = "github:nix-community/NUR";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # nix-on-droid usa su propio nixpkgs (no sigue 26.05 aún)
     nix-on-droid = {
       url = "github:nix-community/nix-on-droid/release-24.05";
@@ -36,7 +41,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, mangowm, spicetify-nix, caelestia-shell, nix-on-droid, zen-browser, ... }:
+  outputs = { self, nixpkgs, home-manager, mangowm, spicetify-nix, caelestia-shell, nix-on-droid, zen-browser, nur, ... }:
   let
     sharedHomeModules = [
       spicetify-nix.homeManagerModules.spicetify
@@ -50,6 +55,7 @@
         inherit system;
         modules = [
           mangowm.nixosModules.mango
+          { nixpkgs.overlays = [ nur.overlays.default ]; }
           ./hosts/${hostname}/configuration.nix
           home-manager.nixosModules.home-manager
           {

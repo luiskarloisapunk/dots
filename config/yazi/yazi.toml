@@ -1,3 +1,33 @@
+[opener]
+zen = [
+  { run = "zen %*", desc = "Zen Browser", orphan = true },
+]
+pptx-to-pdf = [
+  { run = "pptx-to-pdf %*", desc = "Convertir a PDF y abrir en Zen", orphan = true },
+]
+emacs = [
+  { run = "emacs %*", desc = "Emacs", orphan = true },
+]
+rnote = [
+  { run = "rnote %*", desc = "Rnote", orphan = true },
+]
+
+[open]
+prepend_rules = [
+  { mime = "image/*",        use = "zen" },
+  { mime = "application/pdf", use = "zen" },
+  { mime = "text/html",      use = "zen" },
+  { mime = "image/svg+xml",  use = "zen" },
+  { mime = "application/vnd.openxmlformats-officedocument.presentationml.presentation", use = "pptx-to-pdf" },
+  { mime = "application/vnd.ms-powerpoint", use = "pptx-to-pdf" },
+  { url = "**/*.pptx", use = "pptx-to-pdf" },
+  { url = "**/*.ppt",  use = "pptx-to-pdf" },
+  { mime = "text/markdown", use = "emacs" },
+  { url = "**/*.org",   use = "emacs" },
+  { url = "**/*.md",    use = "emacs" },
+  { url = "**/*.rnote", use = "rnote" },
+]
+
 [plugin]
 prepend_previewers = [
   { mime = "text/csv",                  run = "duckdb" },

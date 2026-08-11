@@ -32,10 +32,11 @@
   environment.systemPackages = [ pkgs.brightnessctl ];
 
   services.syncthing.settings = {
-    devices."AM".id = "CE2IQN7-QWM6GN5-MY653EL-PVR3UTP-NRY3KBV-ZZPKMLJ-RQTVLGD-UC64RQ7";
+    devices."AM".id    = "CE2IQN7-QWM6GN5-MY653EL-PVR3UTP-NRY3KBV-ZZPKMLJ-RQTVLGD-UC64RQ7";
+    devices."phone".id = "KVXRKPF-KPAYV5B-FGWYEYV-RZGCAIM-UMQ4OAS-AXGNYBJ-6QBOHW4-LTXUWA3";
     folders = {
-      "/home/lk/coco"     = { id = "coco";     devices = [ "AM" ]; };
-      "/home/lk/personal" = { id = "personal"; devices = [ "AM" ]; };
+      "/home/lk/coco"     = { id = "coco";     devices = [ "AM" "phone" ]; };
+      "/home/lk/personal" = { id = "personal"; devices = [ "AM" "phone" ]; };
       "/home/lk/org"      = { id = "org";      devices = [ "AM" ]; };
       "/home/lk/library"  = { id = "library";  devices = [ "AM" ]; };
     };

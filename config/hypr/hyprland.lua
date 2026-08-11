@@ -239,6 +239,12 @@ hl.config({
     },
 })
 
+hl.config({
+    xwayland = {
+        force_zero_scaling = true,
+    },
+})
+
 
 ---------------
 ---- INPUT ----
@@ -267,7 +273,7 @@ hl.config({
 
 hl.gesture({
     fingers   = 3,
-    direction = "horizontal",
+    direction = "vertical",
     action    = "workspace",
 })
 
