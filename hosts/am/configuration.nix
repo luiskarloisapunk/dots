@@ -39,6 +39,7 @@
       "/home/lk/personal" = { id = "personal"; devices = [ "AM" "phone" ]; };
       "/home/lk/org"      = { id = "org";      devices = [ "AM" ]; };
       "/home/lk/library"  = { id = "library";  devices = [ "AM" ]; };
+      "/home/lk/academic" = { id = "academic"; devices = [ "AM" ]; };
     };
   };
 
