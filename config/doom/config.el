@@ -592,6 +592,15 @@ Se ejecuta en `org-capture-after-finalize-hook' si se usó la plantilla de Clase
    org-modern-hide-stars t))
 
 ;;; -----------------------------------------------------------------------
+;;; 9. ARCHIVOS EXTERNOS: abrir con app nativa
+;;; -----------------------------------------------------------------------
+(add-to-list 'auto-mode-alist
+             '("\\.rnote\\'" . (lambda ()
+                                 (let ((file buffer-file-name))
+                                   (kill-buffer)
+                                   (start-process "rnote" nil "rnote" file)))))
+
+;;; -----------------------------------------------------------------------
 ;;; 9. ORG-NOTER
 ;;; -----------------------------------------------------------------------
 (use-package! org-noter
