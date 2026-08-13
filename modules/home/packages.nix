@@ -49,5 +49,6 @@
         done
       '';
     })
+    bluetui
   ];
 }
