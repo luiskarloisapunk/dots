@@ -633,6 +633,24 @@ Se ejecuta en `org-capture-after-finalize-hook' si se usó la plantilla de Clase
       )
 (map! :i "C-c n i" #'org-roam-node-insert-immediate)
 
+;;; -----------------------------------------------------------------------
+;;; 11. QUICKRUN
+;;; -----------------------------------------------------------------------
+(after! quickrun
+  (quickrun-add-command "c++/g++"
+    '((:command . "g++")
+      (:exec . ("%c -std=c++11 -O2 -Wall %s -o %e" "%e"))
+      (:remove . ("%e")))
+    :default "c++")
+  (quickrun-add-command "bash"
+    '((:command . "bash")
+      (:exec . "%c %s"))
+    :default "bash"))
+
+(map! :leader
+      (:prefix-map ("c" . "code")
+       :desc "Quick run" "r" #'quickrun))
+
 (map! :map org-mode-map
       "C-M-i" #'completion-at-point
       :localleader

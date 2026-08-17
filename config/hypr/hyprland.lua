@@ -40,7 +40,9 @@ hl.monitor({
 
 -- Set programs that you use
 local terminal    = "kitty"
-local fileManager = "yazi"
+local fileManager = "kitty -e yazi"
+local editor      = "emacs"
+local browser     = "zen"
 
 hl.env("XCURSOR_THEME","Hackneyed-Dark")
 hl.env("XCURSOR_SIZE","20")
@@ -112,7 +114,7 @@ hl.config({
         -- Please see https://wiki.hypr.land/Configuring/Advanced-and-Cool/Tearing/ before you turn this on
         allow_tearing = false,
 
-        layout = "dwindle",
+        layout = "scrolling",
     },
 
     decoration = {
@@ -198,7 +200,7 @@ hl.config({
 
 hl.window_rule({
   match = { class = "emacs" },
-  opacity = "0.85 0.85"
+  opacity = "0.9 0.85"
 })
 
 hl.window_rule({
@@ -213,6 +215,11 @@ hl.window_rule({
 hl.window_rule({
   match = { class = "Spotify" },
   tile = true,
+})
+
+hl.window_rule({
+  match   = { class = "codium" },
+  opacity = "0.9 0.85"
 })
 -- See https://wiki.hypr.land/Configuring/Layouts/Master-Layout/ for more
 hl.config({
@@ -266,16 +273,16 @@ hl.config({
             tap_to_click      = true,
             tap_button_map    = "lmr",
             drag_lock         = true,
-            scroll_factor     = 0.3,
+            scroll_factor     = 0.2,
         },
     },
 })
 
-hl.gesture({
-    fingers   = 3,
-    direction = "vertical",
-    action    = "workspace",
-})
+----hl.gesture({
+--    fingers   = 3,
+--    direction = "vertical",
+--      action    = "workspace",
+--      })
 
 local _hsp = io.open("/etc/hyprspace-path", "r")
 local hyprspace = _hsp and _hsp:read("*l") or nil
@@ -302,7 +309,9 @@ hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd("caelestia shell drawers toggle l
 local closeWindowBind = hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("caelestia shell drawers toggle session"))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
+hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd(fileManager))
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(editor))
+--hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only

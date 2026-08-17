@@ -113,6 +113,9 @@ in
 
   programs.bash = {
     enable = true;
+    bashrcExtra = ''
+      cpp() { g++ -std=c++11 -O2 -Wall "$1" -o /tmp/cpp_out && /tmp/cpp_out; }
+    '';
     shellAliases = {
       culo   = "echo Come mierda, majadero";
       dots   = "cd ${config.home.homeDirectory}/.dots && nvim .";

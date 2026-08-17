@@ -22,6 +22,7 @@
       "/home/lk/org"      = { id = "org";      devices = [ "am" ]; };
       "/home/lk/library"  = { id = "library";  devices = [ "am" ]; };
       "/home/lk/academic" = { id = "academic"; devices = [ "am" ]; };
+      "/home/lk/projects" = { id = "projects"; devices = [ "am" ]; };
     };
   };
 

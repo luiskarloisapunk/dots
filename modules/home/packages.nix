@@ -1,7 +1,16 @@
 { pkgs, zen-browser, ... }:
 
 {
+  programs.vscodium = {
+    enable = true;
+    profiles.default.extensions = with pkgs.vscode-extensions; [
+      llvm-vs-code-extensions.vscode-clangd
+      ms-python.python
+    ];
+  };
+
   home.packages = with pkgs; [
+    clang-tools
     neovim
     emacs-pgtk
     fd
