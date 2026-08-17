@@ -40,6 +40,7 @@
       "/home/lk/org"      = { id = "org";      devices = [ "AM" ]; };
       "/home/lk/library"  = { id = "library";  devices = [ "AM" ]; };
       "/home/lk/academic" = { id = "academic"; devices = [ "AM" ]; };
+      "/home/lk/projects" = { id = "projects"; devices = [ "AM" ]; };
     };
   };
 
