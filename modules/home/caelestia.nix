@@ -179,7 +179,7 @@ xdg.configFile."caelestia/templates/kitty.conf".text = ''
         tray.compact = true;
         status = {
           showBattery = false;
-          showBluetooth = false;
+          showBluetooth = true;
         };
         clock = {
           showDate = true;
@@ -200,7 +200,7 @@ xdg.configFile."caelestia/templates/kitty.conf".text = ''
       };
 
       launcher = {
-        showOnHover = true ;
+        showOnHover = false ;
         enableDangerousActions = false;
         dragThreshold = 10;
         useFuzzy= {

@@ -138,14 +138,12 @@ in
 
   xdg.configFile = builtins.mapAttrs (_: subpath: {
     source = mkSymlink "${dotfiles}/${subpath}";
-    recursive = true;
   }) configDirs;
 
   home.activation.dirSkeleton = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     echo "Asegurando esqueleto de directorios..."
     ${lib.concatMapStrings (dir: "mkdir -p $HOME/${dir}\n") [
       "coco"
-      "downloads"
       "academic"
       "projects"
       "library/books"

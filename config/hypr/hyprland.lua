@@ -58,8 +58,10 @@ hl.env("HYPRCURSOR_SIZE", "")
 -- Or execute your favorite apps at launch like this:
 --
  hl.on("hyprland.start", function ()
+  hl.exec_cmd("awww-daemon & awww img /home/lk/.dots/hypr/default.jpg")
   hl.exec_cmd("caelestia-shell")
   hl.exec_cmd("localsend --hidden")
+  hl.exec_cmd("kitty --class fetch-splash --hold -e fetch")
  end)
 
 
@@ -199,6 +201,14 @@ hl.config({
 })
 
 hl.window_rule({
+  match       = { class = "fetch-splash" },
+  float       = true,
+  center      = true,
+  size        = "1000 750"
+--  border_size = 0,
+})
+
+hl.window_rule({
   match = { class = "emacs" },
   opacity = "0.9 0.85"
 })
@@ -208,7 +218,6 @@ hl.window_rule({
   float       = true,
   center      = true,
   size        = "820 560",
-  opacity     = "0.95 0.92",
   border_size = 0,
 })
 
@@ -333,8 +342,9 @@ hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
-    hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
-    hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }))
+    hl.bind(mainMod .. " + " .. key,                   hl.dsp.focus({ workspace = i}))
+    hl.bind(mainMod .. " + SHIFT + " .. key,           hl.dsp.window.move({ workspace = i }))
+    hl.bind("SHIFT + ALT + " .. key,                   hl.dsp.window.move({ workspace = i, follow = false }))
 end
 
 -- Example special workspace (scratchpad)
@@ -401,8 +411,13 @@ end)
 
 -- Example window rules that are useful
 
+hl.window_rule({
+    name      = "open-on-current-workspace",
+    match     = { class = ".*" },
+    workspace = "current",
+})
+
 local suppressMaximizeRule = hl.window_rule({
-    -- Ignore maximize requests from all apps. You'll probably like this.
     name  = "suppress-maximize-events",
     match = { class = ".*" },
 
@@ -444,7 +459,6 @@ local function zoom(offset)
     hl.config({ cursor = { zoom_factor = current } })
 end
 
-hl.bind("SUPER + A", hl.dsp.exec_cmd("hyprctl dispatch overview:toggle"))
 hl.bind("SUPER + Z", zoom)
 hl.bind("SUPER + SHIFT + equal", function()
     zoom(0.5)
