@@ -218,7 +218,7 @@ xdg.configFile."caelestia/templates/kitty.conf".text = ''
       osd.enableBrightness = false;
 
       services = {
-        weatherLocation= "Culiacán";
+        weatherLocation= "Monterrey";
         useFahrenheit = false;
         useTwelveHourClock = false;
       };

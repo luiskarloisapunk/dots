@@ -12,6 +12,23 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.timeout = 0;
+
+  boot.kernelParams = [
+    "quiet"
+    "loglevel=3"
+    "rd.udev.log_level=3"
+    "udev.log_priority=3"
+    "systemd.show_status=auto"
+  ];
+
+  boot.initrd.systemd.enable = true;
+
+  fileSystems."/".options = [ "noatime" ];
+
+  systemd.services.NetworkManager-wait-online.enable = false;
+
+  systemd.settings.Manager.DefaultTimeoutStopSec = "5s";
 
   services.syncthing.settings = {
     devices."am".id = "ERR3JLQ-4PZGOEB-OFRIT4K-A6HIHDM-QLVEQ5X-D5N5Q6C-7KD7EBO-GT3NYQT";
@@ -25,6 +42,11 @@
       "/home/lk/projects" = { id = "projects"; devices = [ "am" ]; };
     };
   };
+
+  services.fprintd.enable = true;
+  services.fwupd.enable = true;
+
+  security.pam.services.ly.fprintAuth = false;
 
   system.stateVersion = "26.05";
 }

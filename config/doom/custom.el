@@ -5,7 +5,8 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(doom-themes mixed-pitch org-roam org-superstar pdf-tools super-save))
+   '(doom-themes mixed-pitch org-pdftools org-roam org-superstar pdf-tools
+     super-save))
  '(warning-suppress-types '((server) (defvaralias) (lexical-binding))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
