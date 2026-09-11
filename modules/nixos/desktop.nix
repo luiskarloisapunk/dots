@@ -67,4 +67,11 @@
   services.flatpak.enable = true;
 
   virtualisation.libvirtd.enable = true;
+
+  virtualisation.docker = {
+    enable = true;
+    enableOnBoot = false;
+  };
+
+  users.users.lk.extraGroups = [ "docker" ];
 }
