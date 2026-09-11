@@ -1,6 +1,38 @@
-{ pkgs, zen-browser, ... }:
+{ pkgs, zen-browser, inputs, ... }:
 
 {
+  imports = [ inputs.areofyl-fetch.homeManagerModules.default ];
+
+  programs.fetch = {
+    enable = true;
+    labelColor = "red";
+    info = [
+      "os"
+      "kernel"
+      "uptime"
+      "packages"
+      "shell"
+      "display"
+      "wm"
+      "theme"
+      "icons"
+      "font"
+      "terminal"
+      "cpu"
+      "gpu"
+      "memory"
+      "swap"
+      "disk"
+      "ip"
+      "locale"
+      "colors"
+    ];
+    size = 4.0;
+    speed = 1.0;
+    spin = "xy";
+    extraConfig = "futureOptionFloat = 1.0";
+  };
+
   programs.vscodium = {
     enable = true;
     profiles.default.extensions = with pkgs.vscode-extensions; [
@@ -59,5 +91,6 @@
       '';
     })
     bluetui
+    fastfetch
   ];
 }

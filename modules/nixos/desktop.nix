@@ -1,6 +1,15 @@
 { pkgs, ... }:
 
 {
+  boot.plymouth = {
+    enable = true;
+    theme = "spinner";
+  };
+
+  boot.kernelParams = [ "quiet" "splash" "loglevel=0" "rd.udev.log_level=3" "udev.log_priority=3" "rd.systemd.show_status=false" ];
+  boot.consoleLogLevel = 0;
+  boot.initrd.verbose = false;
+
   services.displayManager.ly = {
     enable = true;
     settings = {
@@ -57,4 +66,13 @@
   hardware.opentabletdriver.daemon.enable = true;
 
   services.flatpak.enable = true;
+
+  virtualisation.libvirtd.enable = true;
+
+  virtualisation.docker = {
+    enable = true;
+    enableOnBoot = false;
+  };
+
+  users.users.lk.extraGroups = [ "docker" ];
 }

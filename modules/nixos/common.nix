@@ -28,6 +28,11 @@
     dates = "weekly";
   };
 
+  systemd.settings.Manager = {
+    DefaultTimeoutStopSec = "10s";
+    DefaultTimeoutStartSec = "15s";
+  };
+
   time.timeZone = "America/Monterrey";
 
   networking.networkmanager.enable = true;
@@ -36,7 +41,7 @@
 
   users.users.lk = {
     isNormalUser = true;
-    extraGroups = [ "wheel" "opentabletdriver" ];
+    extraGroups = [ "wheel" "opentabletdriver" "libvirtd" ];
     packages = with pkgs; [ tree ];
   };
 
@@ -46,12 +51,14 @@
     viAlias = true;
     vimAlias = true;
   };
-
  # programs.firefox.enable = true;
 
   environment.systemPackages = with pkgs; [
     wget
     neovim
     git
+    gnome-boxes # VM management
+    dnsmasq # VM networking
+    phodav # (
   ];
 }

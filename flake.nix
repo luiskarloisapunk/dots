@@ -29,6 +29,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    areofyl-fetch = {
+      url = "github:areofyl/fetch";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nur = {
       url = "github:nix-community/NUR";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -41,14 +46,14 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, mangowm, spicetify-nix, caelestia-shell, nix-on-droid, zen-browser, nur, ... }:
+  outputs = { self, nixpkgs, home-manager, mangowm, spicetify-nix, caelestia-shell, nix-on-droid, zen-browser, nur, areofyl-fetch, ... }:
   let
     sharedHomeModules = [
       spicetify-nix.homeManagerModules.spicetify
       caelestia-shell.homeManagerModules.default
     ];
 
-    sharedArgs = { inherit spicetify-nix zen-browser; };
+    sharedArgs = { inherit spicetify-nix zen-browser; inputs = { inherit areofyl-fetch; }; };
 
     mkNixosHost = { hostname, system ? "x86_64-linux" }:
       nixpkgs.lib.nixosSystem {

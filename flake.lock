@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "areofyl-fetch": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787419291,
+        "narHash": "sha256-KPUSa2/YT91LIBOA/K7dbitTd92FyU5ZdaKeu5ZmQsU=",
+        "owner": "areofyl",
+        "repo": "fetch",
+        "rev": "070c7a4d38036af65c38c782af5723cea8003d38",
+        "type": "github"
+      },
+      "original": {
+        "owner": "areofyl",
+        "repo": "fetch",
+        "type": "github"
+      }
+    },
     "caelestia-cli": {
       "inputs": {
         "caelestia-shell": [
@@ -370,6 +390,7 @@
     },
     "root": {
       "inputs": {
+        "areofyl-fetch": "areofyl-fetch",
         "caelestia-shell": "caelestia-shell",
         "home-manager": "home-manager",
         "mangowm": "mangowm",
