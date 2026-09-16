@@ -14,6 +14,21 @@ let
 
   financeDir = "${config.home.homeDirectory}/personal/finance";
 
+  dotsSyncScript = pkgs.writeShellApplication {
+    name = "dots-sync";
+    runtimeInputs = [ pkgs.git ];
+    text = ''
+      cd "$HOME/.dots"
+      git fetch github --quiet 2>/dev/null || exit 0
+      LOCAL=$(git rev-parse @)
+      REMOTE=$(git rev-parse github/main)
+      if [ "$LOCAL" != "$REMOTE" ]; then
+        echo "Nuevos commits en dotfiles, jalando..."
+        git pull --ff-only github main
+      fi
+    '';
+  };
+
   hladd = pkgs.writeShellApplication {
     name = "hladd";
     runtimeInputs = [ ];
@@ -139,6 +154,26 @@ in
   xdg.configFile = builtins.mapAttrs (_: subpath: {
     source = mkSymlink "${dotfiles}/${subpath}";
   }) configDirs;
+
+  systemd.user.services.dots-sync = {
+    Unit = {
+      Description = "Jalar dotfiles desde GitHub";
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${dotsSyncScript}/bin/dots-sync";
+    };
+  };
+
+  systemd.user.timers.dots-sync = {
+    Unit.Description = "Timer para sincronizar dotfiles";
+    Timer = {
+      OnBootSec = "2min";
+      OnUnitActiveSec = "10min";
+      Persistent = true;
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
 
   home.activation.dirSkeleton = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     echo "Asegurando esqueleto de directorios..."

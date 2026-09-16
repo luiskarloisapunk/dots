@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   imports = [
@@ -10,8 +10,18 @@
 
   networking.hostName = "AM";
 
-  boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.grub = {
+    enable = true;
+    device = "nodev";
+    efiSupport = true;
+    theme = pkgs.fetchFromGitHub {
+      owner = "Blaysht";
+      repo = "grub_bios_theme";
+      rev = "035554c30df6a10158a5a71acfbc4975045fc7ac";
+      sha256 = "0hddg3xx3aykxsyl94bifrwbi0w18pmw1h07387rr2kx4lq091wi";
+    } + "/OldBIOS";
+  };
 
   services.syncthing.settings = {
     devices."am".id = "ERR3JLQ-4PZGOEB-OFRIT4K-A6HIHDM-QLVEQ5X-D5N5Q6C-7KD7EBO-GT3NYQT";

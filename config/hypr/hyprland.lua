@@ -332,11 +332,27 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({action="toggle"}))    -- dw
  hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.swap({ direction = "up" }))
  hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.swap({ direction = "down" }))
 
+-- In monocle layout, cycle windows; otherwise move focus normally
+local function smart_focus(direction)
+    local ws = hl.get_active_workspace()
+    if ws and ws.tiled_layout == "monocle" then
+        local msg = (direction == "left" or direction == "up") and "cycleprev" or "cyclenext"
+        hl.dispatch(hl.dsp.layout(msg))
+    else
+        hl.dispatch(hl.dsp.focus({ direction = direction }))
+    end
+end
 
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
+hl.bind(mainMod .. " + left",  function() smart_focus("left") end)
+hl.bind(mainMod .. " + right", function() smart_focus("right") end)
+hl.bind(mainMod .. " + up",    function() smart_focus("up") end)
+hl.bind(mainMod .. " + down",  function() smart_focus("down") end)
+
+-- Resize windows with SUPER + ALT + arrow keys
+hl.bind(mainMod .. " + ALT + right", hl.dsp.window.resize({ x = 30,  y = 0,   relative = true }), { repeating = true })
+hl.bind(mainMod .. " + ALT + left",  hl.dsp.window.resize({ x = -30, y = 0,   relative = true }), { repeating = true })
+hl.bind(mainMod .. " + ALT + up",    hl.dsp.window.resize({ x = 0,   y = -30, relative = true }), { repeating = true })
+hl.bind(mainMod .. " + ALT + down",  hl.dsp.window.resize({ x = 0,   y = 30,  relative = true }), { repeating = true })
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
