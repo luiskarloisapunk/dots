@@ -58,8 +58,10 @@ hl.env("HYPRCURSOR_SIZE", "")
 -- Or execute your favorite apps at launch like this:
 --
  hl.on("hyprland.start", function ()
-  hl.exec_cmd("awww-daemon & awww img /home/lk/.dots/hypr/default.jpg")
+  hl.exec_cmd("awww-daemon & awww img /home/lk/.dots/config/hypr/default.jpg")
   hl.exec_cmd("caelestia-shell")
+  hl.exec_cmd("wl-paste --type text --watch cliphist store")
+  hl.exec_cmd("wl-paste --type image --watch cliphist store")
   hl.exec_cmd("localsend --hidden")
   hl.exec_cmd("kitty --class fetch-splash --hold -e fetch")
  end)
@@ -88,7 +90,7 @@ hl.env("HYPRCURSOR_SIZE", "")
 --   },
 -- })
 
--- hl.permission("/usr/(bin|local/bin)/grim", "screencopy", "allow")
+hl.permission("/usr/(bin|local/bin)/grim", "screencopy", "allow")
 -- hl.permission("/usr/(lib|libexec|lib64)/xdg-desktop-portal-hyprland", "screencopy", "allow")
 -- hl.permission("/usr/(bin|local/bin)/hyprpm", "plugin", "allow")
 
@@ -366,7 +368,8 @@ end
 -- Example special workspace (scratchpad)
 hl.bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.move({ workspace = "special:magic" }))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("caelestia screenshot"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("caelestia screenshot -r -f"))
+hl.bind("PRINT",                   hl.dsp.exec_cmd("caelestia screenshot"))
 
 -- Scroll through existing workspaces with mainMod + scroll
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
