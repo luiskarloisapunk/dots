@@ -1,4 +1,4 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
   imports = [
@@ -10,9 +10,20 @@
 
   networking.hostName = "AM";
 
-  boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.timeout = 0;
+  boot.loader.timeout = 3;
+
+  boot.loader.grub = {
+    enable = true;
+    device = "nodev";
+    efiSupport = true;
+    theme = pkgs.fetchFromGitHub {
+      owner = "Blaysht";
+      repo = "grub_bios_theme";
+      rev = "035554c30df6a10158a5a71acfbc4975045fc7ac";
+      sha256 = "0hddg3xx3aykxsyl94bifrwbi0w18pmw1h07387rr2kx4lq091wi";
+    } + "/OldBIOS";
+  };
 
   boot.kernelParams = [
     "quiet"

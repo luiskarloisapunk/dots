@@ -58,8 +58,10 @@ hl.env("HYPRCURSOR_SIZE", "")
 -- Or execute your favorite apps at launch like this:
 --
  hl.on("hyprland.start", function ()
-  hl.exec_cmd("awww-daemon & awww img /home/lk/.dots/hypr/default.jpg")
+  hl.exec_cmd("awww-daemon & awww img /home/lk/.dots/config/hypr/default.jpg")
   hl.exec_cmd("caelestia-shell")
+  hl.exec_cmd("wl-paste --type text --watch cliphist store")
+  hl.exec_cmd("wl-paste --type image --watch cliphist store")
   hl.exec_cmd("localsend --hidden")
   hl.exec_cmd("kitty --class fetch-splash --hold -e fetch")
  end)
@@ -88,7 +90,7 @@ hl.env("HYPRCURSOR_SIZE", "")
 --   },
 -- })
 
--- hl.permission("/usr/(bin|local/bin)/grim", "screencopy", "allow")
+hl.permission("/usr/(bin|local/bin)/grim", "screencopy", "allow")
 -- hl.permission("/usr/(lib|libexec|lib64)/xdg-desktop-portal-hyprland", "screencopy", "allow")
 -- hl.permission("/usr/(bin|local/bin)/hyprpm", "plugin", "allow")
 
@@ -332,11 +334,27 @@ hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({action="toggle"}))    -- dw
  hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.swap({ direction = "up" }))
  hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.swap({ direction = "down" }))
 
+-- In monocle layout, cycle windows; otherwise move focus normally
+local function smart_focus(direction)
+    local ws = hl.get_active_workspace()
+    if ws and ws.tiled_layout == "monocle" then
+        local msg = (direction == "left" or direction == "up") and "cycleprev" or "cyclenext"
+        hl.dispatch(hl.dsp.layout(msg))
+    else
+        hl.dispatch(hl.dsp.focus({ direction = direction }))
+    end
+end
 
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
+hl.bind(mainMod .. " + left",  function() smart_focus("left") end)
+hl.bind(mainMod .. " + right", function() smart_focus("right") end)
+hl.bind(mainMod .. " + up",    function() smart_focus("up") end)
+hl.bind(mainMod .. " + down",  function() smart_focus("down") end)
+
+-- Resize windows with SUPER + ALT + arrow keys
+hl.bind(mainMod .. " + ALT + right", hl.dsp.window.resize({ x = 30,  y = 0,   relative = true }), { repeating = true })
+hl.bind(mainMod .. " + ALT + left",  hl.dsp.window.resize({ x = -30, y = 0,   relative = true }), { repeating = true })
+hl.bind(mainMod .. " + ALT + up",    hl.dsp.window.resize({ x = 0,   y = -30, relative = true }), { repeating = true })
+hl.bind(mainMod .. " + ALT + down",  hl.dsp.window.resize({ x = 0,   y = 30,  relative = true }), { repeating = true })
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
@@ -350,7 +368,8 @@ end
 -- Example special workspace (scratchpad)
 hl.bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.move({ workspace = "special:magic" }))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("caelestia screenshot"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("caelestia screenshot -r -f"))
+hl.bind("PRINT",                   hl.dsp.exec_cmd("caelestia screenshot"))
 
 -- Scroll through existing workspaces with mainMod + scroll
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))

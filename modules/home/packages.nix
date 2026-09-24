@@ -56,6 +56,9 @@
       runtimeInputs = [ fzf nix-search-tv ];
       text = builtins.readFile "${nix-search-tv.src}/nixpkgs.sh";
     })
+    grim
+    slurp
+    cliphist
     awww
     quickshell
     prismlauncher
